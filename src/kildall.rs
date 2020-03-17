@@ -28,25 +28,20 @@ fn get_elem<'a, T : Checkable> (node : &Node<T>, store : &'a Store<T>) -> &'a T 
     return &store.store_map[id]; 
 }
 
-fn set_elem<'a, T : Checkable> (node : &Node<T>, state : T, store : &'a Store<T>) {
+fn set_elem<T : Checkable> (node : &Node<T>, state : T, store : &mut Store<T>) {
     let id = &node.node_id;
-//    store.storeMap[id] = state;
-    panic!();
+    store.store_map.insert(*id, state);
 }
 
-fn make_and_add_successors<T : Checkable> (node : &Node<T>, state : T, worklist : &VecDeque<Node<T>>) {
-    // Get the node's successor ids
+fn make_and_add_successors<T : Checkable> (node : &Node<T>, state : T, worklist : &mut VecDeque<Node<T>>) {
     let new_ids = [(6,5)];
     for new_id in new_ids.iter() {
 	let new_node = Node { node_id : *new_id, node_state : state };
-    // 	worklist.push_back(Node { nodeId : *newId, nodeState : state}); 
+	worklist.push_back(new_node);
     }
-    // add the given state to make new nodes
-    // update the vector to include them
-    panic!();
 }
 
-fn kildall<T : Checkable> (mut worklist : VecDeque<Node<T>>, store : Store<T>) -> Store<T> {
+fn kildall<T : Checkable> (mut worklist : VecDeque<Node<T>>, mut store : Store<T>) -> Store<T> {
     if worklist.len() == 0 { return store; }
     let node = worklist.pop_front().unwrap();
     // See if the state has reached a fixed point yet
@@ -55,11 +50,11 @@ fn kildall<T : Checkable> (mut worklist : VecDeque<Node<T>>, store : Store<T>) -
     let new_state = T::meet(incoming_state, current_state);
     if new_state == *current_state { return kildall(worklist, store); }
     // Update the information at this node in the state
-    set_elem(&node, new_state, &store);
+    set_elem(&node, new_state, &mut store);
     // Get the information about this node using the transfer function,
     // and propagate it to all the node's successors
     let transferred_state = T::transfer(&node);
-    make_and_add_successors(&node, transferred_state, &worklist);
+    make_and_add_successors(&node, transferred_state, &mut worklist);
     return kildall(worklist, store);
 }
 
