@@ -34,6 +34,7 @@ fn set_elem<T : Checkable> (node : &Node<T>, state : T, store : &mut Store<T>) {
 }
 
 fn make_and_add_successors<T : Checkable> (node : &Node<T>, state : T, worklist : &mut VecDeque<Node<T>>) {
+    // replace this with whatever our lookup ends up being
     let new_ids = [(6,5)];
     for new_id in new_ids.iter() {
 	let new_node = Node { node_id : *new_id, node_state : state };
