@@ -16,10 +16,22 @@ enum Location {
 
 enum RegisterState {
     Start,
-    Error { message : String },
-    RegMap { regmap : HashMap<Location, HashSet<VirtualRegister>> },
+    Error ( String ) ,
+    RegMap ( HashMap<Location, HashSet<VirtualRegister>> ),
 }
 
+impl PartialEq for RegisterState {
+    fn eq(&self, other: &Self) -> bool {
+	use RegisterState::*;
+	match (self, other) {
+	    (&Start, _)                            => false,
+	    (_, &Start)                            => false,
+	    (&Error ( ref m1 ), &Error ( ref m2 )) => m1 == m2,
+//	    (&RegMap (ref h1 ), &RegMap (ref h2))  => h1 == h2,
+	    _                                      => false,
+	}
+    }
+}
 
 fn main () {
       println!("Hello, world!");
