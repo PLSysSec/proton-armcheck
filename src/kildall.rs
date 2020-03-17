@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::collections::VecDeque;
 
+
 // for now 
 type LIR = u8;
 
@@ -17,7 +18,7 @@ pub struct Store<T> {
 
 pub trait Checkable
 where
-    Self: Sized + PartialEq + Copy
+    Self: PartialEq + Clone
 {
     fn meet(fst: &Self, snd: &Self) -> Self; 
     fn transfer(fst: &Node<Self>) -> Self; 
@@ -37,7 +38,7 @@ fn make_and_add_successors<T : Checkable> (node : &Node<T>, state : T, worklist 
     // replace this with whatever our lookup ends up being
     let new_ids = [(6,5)];
     for new_id in new_ids.iter() {
-	let new_node = Node { node_id : *new_id, node_state : state };
+	let new_node = Node { node_id : *new_id, node_state : state.clone() };
 	worklist.push_back(new_node);
     }
 }
