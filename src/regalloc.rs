@@ -29,7 +29,7 @@ impl PartialEq for RegisterState {
 	    (&Start, _)                            => false,
 	    (_, &Start)                            => false,
 	    (&Error ( ref m1 ), &Error ( ref m2 )) => m1 == m2,
-	    (&RegMap (ref h1 ), &RegMap (ref h2))  => *h1 == *h2,
+	    (&RegMap (ref h1 ), &RegMap (ref h2))  => h1 == h2,
 	    _                                      => false,
 	}
     }
@@ -46,12 +46,11 @@ impl Checkable for RegisterState {
     }
 }
 
+fn transfer_phi(node : &Node<RegisterState>) -> RegisterState { panic!(); }
 
-fn transfer_phi () {}
+fn transfer_move(node : &Node<RegisterState>) -> RegisterState { panic!(); }
 
-fn transfer_move () {}
-
-fn transfer_other () {}
+fn transfer_other(node : &Node<RegisterState>) -> RegisterState { panic!(); }
 
 fn main () {
       println!("Hello, world!");
