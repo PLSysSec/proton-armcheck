@@ -24,6 +24,8 @@ dependencies:
 
 library:
   source-dirs: src
+  dependencies:
+  - parsec >= 3.1.14.0
 
 executables:
   invparse-exe:

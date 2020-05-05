@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 820f07da7b026a928ccf1d831c1803f033fe233106d85bdb7dc13e772c6b69c9
+-- hash: 37eafdd12ec6bf52d1abeed2972c4f6f4e01c5df2915755756d8045495e52ed5
 
 name:           invparse
 version:        0.1.0.0
@@ -27,13 +27,16 @@ source-repository head
 
 library
   exposed-modules:
+      AST
       Lib
+      Parse
   other-modules:
       Paths_invparse
   hs-source-dirs:
       src
   build-depends:
       base >=4.7 && <5
+    , parsec >=3.1.14.0
   default-language: Haskell2010
 
 executable invparse-exe
