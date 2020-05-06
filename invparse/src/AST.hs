@@ -2,11 +2,13 @@
 module AST ( Bits
            , instr
            -- * Instruction building helpers
-           , threeArgInstr
+           , threeArgInstr -- Three argument instruction
+           , twoArgEx -- Two argument extended instruction
            -- * Helpers that constrain bits within an instruction
            , constant
            , zeroed
            , undef
+           , any
            , choice
            , pchoice
            , range
@@ -15,6 +17,7 @@ module AST ( Bits
            , Constraint(..)
            )
     where
+import           Prelude hiding (any)
 
 
 data Instruction = Instruction [Bits]
@@ -31,9 +34,17 @@ threeArgInstr op = instr [ constant 31 21 op
                          , anyReg 4 0
                          ]
 
-mkInstruction = error
-
-
+twoArgEx :: Int
+         -> Bits -- ^ Register 1
+         -> Bits -- ^ Register 2
+         -> Instruction
+twoArgEx op r1 r2 = instr [ constant 31 21 op
+                          , undef 20 16
+                          , any 15 13
+                          , range 12 10 0 4
+                          , r1
+                          , r2
+                          ]
 
 data Bits = Bits { high       :: Int
                  , low        :: Int
@@ -43,7 +54,7 @@ data Bits = Bits { high       :: Int
 
 mkBits :: Int -> Int -> Constraint -> Bits
 mkBits h l c
-    | l >= h = error $ unwords ["Low greater than or equal to high:", show l, show h]
+    | l > h = error $ unwords ["Low greater than high:", show l, show h]
     | h > 31 || h < 0 = error $ unwords ["High out of range:", show h]
     | l > 31 || l < 0 = error $ unwords ["End out of range:", show l]
     | otherwise = Bits h l c
@@ -64,6 +75,9 @@ constant high low constant = mkBits high low $ Constant constant
 zeroed :: Int -> Int -> Bits
 zeroed high low = mkBits high low $ Constant 0
 
+any :: Int -> Int -> Bits
+any high low = mkBits high low Any
+
 undef :: Int -> Int -> Bits
 undef high low = mkBits high low Undefined
 
@@ -83,6 +97,7 @@ data Constraint = Constant Int
                         , end   :: Int
                         }
                 | Undefined
+                | Any
                 | Other
                 deriving (Eq, Ord, Show)
 
