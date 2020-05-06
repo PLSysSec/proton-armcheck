@@ -7,6 +7,9 @@ module AST ( Bits
            , constant
            , zeroed
            , undef
+           , choice
+           , pchoice
+           , range
            , anyReg
            , anyRegOrSp
            , Constraint(..)
@@ -64,7 +67,18 @@ zeroed high low = mkBits high low $ Constant 0
 undef :: Int -> Int -> Bits
 undef high low = mkBits high low Undefined
 
+choice :: Int -> Int -> [Int] -> Bits
+choice high low cs = mkBits high low $ ConstantChoice cs
+
+pchoice :: Int -> Int -> [String] -> Bits
+pchoice high low cs = mkBits high low $ PartialConstantChoice cs
+
+range :: Int -> Int -> Int -> Int -> Bits
+range high low start end = mkBits high low $ Range start end
+
 data Constraint = Constant Int
+                | ConstantChoice [Int]
+                | PartialConstantChoice [String]
                 | Range { start :: Int
                         , end   :: Int
                         }
