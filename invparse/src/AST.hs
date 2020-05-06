@@ -3,7 +3,9 @@ module AST ( Bits
            , instr
            -- * Instruction building helpers
            , threeArgInstr -- Three argument instruction
+           , threeArgSr -- Three argument shifted register instruction
            , twoArgEx -- Two argument extended instruction
+           , twoArgImm -- Two argument immediate instruction
            -- * Helpers that constrain bits within an instruction
            , constant
            , zeroed
@@ -34,6 +36,17 @@ threeArgInstr op = instr [ constant 31 21 op
                          , anyReg 4 0
                          ]
 
+twoArgImm :: Int
+          -> Bits -- ^ Register 1
+          -> Bits -- ^ Register 2
+          -> Instruction
+twoArgImm op r1 r2 = instr [ constant 31 23 op
+                           , any 22 22
+                           , range 21 10 0 4095
+                           , r1
+                           , r2
+                           ]
+
 twoArgEx :: Int
          -> Bits -- ^ Register 1
          -> Bits -- ^ Register 2
@@ -45,6 +58,23 @@ twoArgEx op r1 r2 = instr [ constant 31 21 op
                           , r1
                           , r2
                           ]
+
+threeArgSr :: Int
+           -> Bits -- ^ Register 1
+           -> Bits -- ^ Register 2
+           -> Bits -- ^ Register 3
+           -> Instruction
+threeArgSr op r1 r2 r3 = instr [ constant 31 24 op
+                               , choice 23 22 [ 00
+                                              , 01
+                                              , 10
+                                              ]
+                               , constant 21 21 0
+                               , r1
+                               , range 15 10 0 63
+                               , r2
+                               , r3
+                               ]
 
 data Bits = Bits { high       :: Int
                  , low        :: Int
