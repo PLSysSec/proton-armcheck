@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 37eafdd12ec6bf52d1abeed2972c4f6f4e01c5df2915755756d8045495e52ed5
+-- hash: a0492e689bfcf5c619fff254d6203c65989cc453089672202352d154e5fa3ee2
 
 name:           invparse
 version:        0.1.0.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       AST
+      Instrs
       Lib
       Parse
   other-modules:
