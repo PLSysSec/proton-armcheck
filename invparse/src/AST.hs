@@ -13,12 +13,13 @@ module AST ( Bits
            , zeroed
            , undef
            , any
+           , not
            , choice
            , range
            , Constraint(..)
            )
     where
-import           Prelude hiding (any)
+import           Prelude hiding (any, not)
 
 -- | An ARM instruction encoding is just some constraints over bits
 data Instruction = Instruction [Bits]
@@ -129,6 +130,9 @@ zeroed high low = mkBits high low $ Constant 0
 any :: Int -> Int -> Bits
 any high low = mkBits high low Any
 
+not :: Int -> Int -> Int -> Bits
+not high low val = mkBits high low $ Not val
+
 -- | No constraints on these bits
 undef :: Int -> Int -> Bits
 undef high low = mkBits high low Undefined
@@ -147,6 +151,7 @@ immedite high low = any high low
 
 data Constraint = Constant Int
                 | ConstantChoice [Int]
+                | Not Int
                 | Range { start :: Int
                         , end   :: Int
                         }

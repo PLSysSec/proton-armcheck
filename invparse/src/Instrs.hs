@@ -1,7 +1,7 @@
 {-# LANGUAGE BinaryLiterals #-}
 module Instrs where
 import           AST
-import           Prelude hiding (any)
+import           Prelude hiding (any, not)
 
 -- Basic instructions
 
@@ -37,6 +37,30 @@ andsr = instr [ constant 31 24 0b10001010
               ]
 
 
+-- Loads: ldr, ldrh, ldrsh, ldrb, ldrsb ldrd
+
+-- ldrreg = instr [ not 21 28 0b1111
+--                , constant 27 25 0b011
+--                , any -- p
+--                , -- u
+--                , constant 22 22 0
+--                , -- w
+--                , constant 20 20 1
+--                , anyReg 19 16
+--                , anyReg 15 12
+--                , -- imm5
+--                , -- stype
+--                , constant 4 4 0
+--                , anyReg 3 0
+--                ]
+
+-- Stores: str, strh, strb, strd
+
+
+
 -- Atomics: ldrexd, ldrex, ldrexh, ldrexb, strexd, strex, strexh, strexb
 
+ldrexd = instr [ not 31 28 0b1111
+               , constant 27 20 0b00011011
+               ]
 
