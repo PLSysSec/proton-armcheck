@@ -19,3 +19,17 @@ addsim = twoArgImm 0b101100010 (anyRegOrSp 9 5) (anyReg 4 0)
 
 addssr = threeArgSr 0b10101011 (anyReg 20 16) (anyReg 9 5) (anyReg 4 0)
 
+andim = instr [ constant 31 23 0b100100100
+              , any 21 10
+              , anyReg 9 5
+              , anyRegOrSp 4 0
+              ]
+
+andsr = instr [ constant 31 24 0b10001010
+              , any 23 22
+              , constant 21 21 0
+              , anyReg 20 16
+              , range 15 10 0 63
+              , anyReg 9 5
+              , anyReg 4 0
+              ]

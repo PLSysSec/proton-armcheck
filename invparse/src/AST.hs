@@ -139,6 +139,9 @@ pchoice high low cs = mkBits high low $ PartialConstantChoice cs
 range :: Int -> Int -> Int -> Int -> Bits
 range high low start end = mkBits high low $ Range start end
 
+immedite :: Int -> Int -> Bits
+immedite high low = any high low
+
 data Constraint = Constant Int
                 | ConstantChoice [Int]
                 | PartialConstantChoice [String]
