@@ -19,9 +19,3 @@ addsim = twoArgImm 0b101100010 (anyRegOrSp 9 5) (anyReg 4 0)
 
 addssr = threeArgSr 0b10101011 (anyReg 20 16) (anyReg 9 5) (anyReg 4 0)
 
--- adr, adrp
-
--- andim = instr [ constant 31 23 0b100100100
---               ,
---               ]
-
