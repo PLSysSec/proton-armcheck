@@ -16,6 +16,7 @@ module AST ( Bits
            , not
            , choice
            , range
+           , neq
            , Constraint(..)
            )
     where
@@ -94,6 +95,7 @@ data Bits = Bits { bits       :: Slice          -- constrain contiguous bits
           | Slices { slices     :: [Slice]      -- constrain non-contiguous bits
                    , constraint :: Constraint
                    }
+          | Global { constraint :: Constraint } -- constrain global properties
        deriving (Eq, Ord, Show)
 
 -- | A slice of bits from high to low, INCLUSIVE
@@ -148,6 +150,9 @@ range high low start end = mkBits high low $ Range start end
 -- | TODO: what is the bitmask encoding exactly
 immedite :: Int -> Int -> Bits
 immedite high low = any high low
+
+neq :: Int -> Int -> Int -> Int -> Bits
+neq high1 low1 high2 low2 = Global $ Neq [Slice high1 low1, Slice high2 low2]
 
 data Constraint = Constant Int
                 | ConstantChoice [Int]
