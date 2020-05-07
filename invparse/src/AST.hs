@@ -22,10 +22,14 @@ module AST ( Bits
 import           Prelude hiding (any)
 
 
-data Instruction = Instruction [Bits]
+data Instruction = Instruction [BitsWrapper]
                  deriving (Eq, Ord, Show)
 
-instr :: [Bits] -> Instruction
+data BitsWrapper = Single Bits
+                 | Multi BitsCombo
+                 deriving (Eq, Ord, Show)
+
+instr :: [BitsWrapper] -> Instruction
 instr = Instruction
 
 threeArgInstr :: Int -> Instruction
@@ -37,8 +41,8 @@ threeArgInstr op = instr [ constant 31 21 op
                          ]
 
 twoArgImm :: Int
-          -> Bits -- ^ Register 1
-          -> Bits -- ^ Register 2
+          -> BitsWrapper -- ^ Register 1
+          -> BitsWrapper -- ^ Register 2
           -> Instruction
 twoArgImm op r1 r2 = instr [ constant 31 23 op
                            , any 22 22
@@ -48,8 +52,8 @@ twoArgImm op r1 r2 = instr [ constant 31 23 op
                            ]
 
 twoArgEx :: Int
-         -> Bits -- ^ Register 1
-         -> Bits -- ^ Register 2
+         -> BitsWrapper -- ^ Register 1
+         -> BitsWrapper -- ^ Register 2
          -> Instruction
 twoArgEx op r1 r2 = instr [ constant 31 21 op
                           , undef 20 16
@@ -60,9 +64,9 @@ twoArgEx op r1 r2 = instr [ constant 31 21 op
                           ]
 
 threeArgSr :: Int
-           -> Bits -- ^ Register 1
-           -> Bits -- ^ Register 2
-           -> Bits -- ^ Register 3
+           -> BitsWrapper -- ^ Register 1
+           -> BitsWrapper -- ^ Register 2
+           -> BitsWrapper -- ^ Register 3
            -> Instruction
 threeArgSr op r1 r2 r3 = instr [ constant 31 24 op
                                , choice 23 22 [ 00
@@ -82,42 +86,47 @@ data Bits = Bits { high       :: Int
                  }
        deriving (Eq, Ord, Show)
 
-mkBits :: Int -> Int -> Constraint -> Bits
+data BitsCombo  = BitsCombo { comboSlices     :: (Int, Int)
+                            , comboConstraint :: Constraint
+                            }
+                deriving (Eq, Ord, Show)
+
+mkBits :: Int -> Int -> Constraint -> BitsWrapper
 mkBits h l c
     | l > h = error $ unwords ["Low greater than high:", show l, show h]
     | h > 31 || h < 0 = error $ unwords ["High out of range:", show h]
     | l > 31 || l < 0 = error $ unwords ["End out of range:", show l]
-    | otherwise = Bits h l c
+    | otherwise = Single $ Bits h l c
 
-anyRegOrSp :: Int -> Int -> Bits
+anyRegOrSp :: Int -> Int -> BitsWrapper
 anyRegOrSp high low
-    | high - low == 4 = Bits high low $ Range 0 31
+    | high - low == 4 = range high low 0 31
     | otherwise = error "Expected four bit field for register or stack pointer"
 
-anyReg :: Int -> Int -> Bits
+anyReg :: Int -> Int -> BitsWrapper
 anyReg high low
-    | high - low == 4 = Bits high low $ Range 0 30
+    | high - low == 4 = range high low 0 30
     | otherwise = error "Expected four bit field for register"
 
-constant :: Int -> Int -> Int -> Bits
+constant :: Int -> Int -> Int -> BitsWrapper
 constant high low constant = mkBits high low $ Constant constant
 
-zeroed :: Int -> Int -> Bits
+zeroed :: Int -> Int -> BitsWrapper
 zeroed high low = mkBits high low $ Constant 0
 
-any :: Int -> Int -> Bits
+any :: Int -> Int -> BitsWrapper
 any high low = mkBits high low Any
 
-undef :: Int -> Int -> Bits
+undef :: Int -> Int -> BitsWrapper
 undef high low = mkBits high low Undefined
 
-choice :: Int -> Int -> [Int] -> Bits
+choice :: Int -> Int -> [Int] -> BitsWrapper
 choice high low cs = mkBits high low $ ConstantChoice cs
 
-pchoice :: Int -> Int -> [String] -> Bits
+pchoice :: Int -> Int -> [String] -> BitsWrapper
 pchoice high low cs = mkBits high low $ PartialConstantChoice cs
 
-range :: Int -> Int -> Int -> Int -> Bits
+range :: Int -> Int -> Int -> Int -> BitsWrapper
 range high low start end = mkBits high low $ Range start end
 
 data Constraint = Constant Int
