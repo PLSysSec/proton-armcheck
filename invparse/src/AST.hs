@@ -3,19 +3,18 @@ module AST ( Bits
            , instr
            -- * Instruction building helpers
            , threeArgInstr -- Three argument instruction
-           , threeArgSr -- Three argument shifted register instruction
-           , twoArgEx -- Two argument extended instruction
-           , twoArgImm -- Two argument immediate instruction
+           , threeArgSr    -- Three argument shifted register instruction
+           , twoArgEx      -- Two argument extended instruction
+           , twoArgImm     -- Two argument immediate instruction
            -- * Helpers that constrain bits within an instruction
+           , anyReg        -- Bits can represent any register
+           , anyRegOrSp    -- Bits can represent any register or the stack pointer
            , constant
            , zeroed
            , undef
            , any
            , choice
-           , pchoice
            , range
-           , anyReg
-           , anyRegOrSp
            , Constraint(..)
            )
     where
@@ -96,6 +95,7 @@ data Bits = Bits { bits       :: Slice          -- constrain contiguous bits
                    }
        deriving (Eq, Ord, Show)
 
+-- | A slice of bits from high to low, INCLUSIVE
 data Slice = Slice { high :: Int
                    , low  :: Int
                    }
@@ -108,11 +108,13 @@ mkBits h l c
     | l > 31 || l < 0 = error $ unwords ["End out of range:", show l]
     | otherwise = Bits (Slice h l) c
 
+-- | Any register or the stack pointer
 anyRegOrSp :: Int -> Int -> Bits
 anyRegOrSp high low
     | high - low == 4 = range high low 0 31
     | otherwise = error "Expected four bit field for register or stack pointer"
 
+-- | Any register, NOT including the stack pointer
 anyReg :: Int -> Int -> Bits
 anyReg high low
     | high - low == 4 = range high low 0 30
@@ -127,65 +129,35 @@ zeroed high low = mkBits high low $ Constant 0
 any :: Int -> Int -> Bits
 any high low = mkBits high low Any
 
+-- | No constraints on these bits
 undef :: Int -> Int -> Bits
 undef high low = mkBits high low Undefined
 
+-- | Choice between possible constants
 choice :: Int -> Int -> [Int] -> Bits
 choice high low cs = mkBits high low $ ConstantChoice cs
 
-pchoice :: Int -> Int -> [String] -> Bits
-pchoice high low cs = mkBits high low $ PartialConstantChoice cs
-
+-- | Between the values start and end, inclusive
 range :: Int -> Int -> Int -> Int -> Bits
 range high low start end = mkBits high low $ Range start end
 
+-- | TODO: what is the bitmask encoding exactly
 immedite :: Int -> Int -> Bits
 immedite high low = any high low
 
 data Constraint = Constant Int
                 | ConstantChoice [Int]
-                | PartialConstantChoice [String]
                 | Range { start :: Int
                         , end   :: Int
                         }
+                | Neq [Slice]
+                | Eq [Slice]
                 | Undefined
                 | Any
-                | Other
                 deriving (Eq, Ord, Show)
 
 
 
--- RegisterType = R64 | SP64 | Z64
---                | SF8 | SF16 | SF32 | SF64 | SF128
---                | S8B | S16B | S4H | S8H | S2S
---                | S4S | S1D | S2D
---                  deriving (Eq, Ord, Show)
-
-
--- Range = Range { start :: Int
---               , end :: Int
---               }
-
-
-
-
--- data Instr = Instr String
-
--- data Register = Register String RegisterType
-
--- data RegisterType = R8
---                   | R16
---                   | R32
---                   | R64
---                   | R128
---                   | SIMDFP
-
--- data Value = Value { start :: Maybe Int
---                    , end   :: Maybe Int
---                    }
-
--- -- | Some more complicated restriction on the input
--- data Restriction = Distinct [Register]
 
 
 

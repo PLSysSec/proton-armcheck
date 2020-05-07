@@ -3,6 +3,8 @@ module Instrs where
 import           AST
 import           Prelude hiding (any)
 
+-- Basic instructions
+
 adc = threeArgInstr 0b10011010000
 
 adcs = threeArgInstr 0b10111010000
@@ -33,3 +35,8 @@ andsr = instr [ constant 31 24 0b10001010
               , anyReg 9 5
               , anyReg 4 0
               ]
+
+
+-- Atomics: ldrexd, ldrex, ldrexh, ldrexb, strexd, strex, strexh, strexb
+
+
