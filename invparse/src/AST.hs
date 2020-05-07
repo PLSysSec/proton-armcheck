@@ -21,12 +21,17 @@ module AST ( Bits
     where
 import           Prelude hiding (any)
 
-
+-- | An ARM instruction encoding is just some constraints over bits
 data Instruction = Instruction [Bits]
                  deriving (Eq, Ord, Show)
 
+-- | Make a new instruction. This will have some safeguards
 instr :: [Bits] -> Instruction
 instr = Instruction
+
+---
+--- Some helpers for standard kinds of instructions
+---
 
 threeArgInstr :: Int -> Instruction
 threeArgInstr op = instr [ constant 31 21 op
@@ -76,27 +81,41 @@ threeArgSr op r1 r2 r3 = instr [ constant 31 24 op
                                , r3
                                ]
 
-data Bits = Bits { high       :: Int
-                 , low        :: Int
+---
+--- Constraints on individual slices of bits
+---
+
+-- | This is how you constrain individual slices of bits
+-- You build instruction encodings by constraining individual
+-- slices of bits, or sets of slices of bits
+data Bits = Bits { bits       :: Slice          -- constrain contiguous bits
                  , constraint :: Constraint
                  }
+          | Slices { slices     :: [Slice]      -- constrain non-contiguous bits
+                   , constraint :: Constraint
+                   }
        deriving (Eq, Ord, Show)
+
+data Slice = Slice { high :: Int
+                   , low  :: Int
+                   }
+           deriving (Eq, Ord, Show)
 
 mkBits :: Int -> Int -> Constraint -> Bits
 mkBits h l c
     | l > h = error $ unwords ["Low greater than high:", show l, show h]
     | h > 31 || h < 0 = error $ unwords ["High out of range:", show h]
     | l > 31 || l < 0 = error $ unwords ["End out of range:", show l]
-    | otherwise = Bits h l c
+    | otherwise = Bits (Slice h l) c
 
 anyRegOrSp :: Int -> Int -> Bits
 anyRegOrSp high low
-    | high - low == 4 = Bits high low $ Range 0 31
+    | high - low == 4 = range high low 0 31
     | otherwise = error "Expected four bit field for register or stack pointer"
 
 anyReg :: Int -> Int -> Bits
 anyReg high low
-    | high - low == 4 = Bits high low $ Range 0 30
+    | high - low == 4 = range high low 0 30
     | otherwise = error "Expected four bit field for register"
 
 constant :: Int -> Int -> Int -> Bits
