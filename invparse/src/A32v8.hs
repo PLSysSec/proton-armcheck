@@ -366,7 +366,93 @@ strbimm = [ not 31 28 0b1111
           , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
           ]
 
--- Are we worried about: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.kui0100a/armasm_cihbghef.htm
+strbreg = [ not 31 28 0b1111
+          , constant 27 25 0b011
+          , any 24 23
+          , constant 22 22 1
+          , any 21 21
+          , constant 20 20 0
+          , reg 19 16
+          , reg 15 12
+          , any 11 7 -- imm5
+          , any 6 5 -- stype
+          , constant 4 4 0
+          , reg 3 0
+          -- restrictions
+          , not' $ t `eq'` fifteen
+          , not' $ m `eq'` fifteen
+          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` c 15)
+          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+          ]
+
+strdimm = [ not 31 28 0b1111
+          , constant 27 25 0b000
+          , any 24 23
+          , constant 22 22 1
+          , any 21 21
+          , constant 20 20 0
+          , reg 19 16
+          , reg 15 12
+          , not 15 12 0
+          , any 11 8 -- imm4H
+          , constant 7 4 0b1111
+          , any 3 0 -- imm4L
+            -- restrictions
+          , not' $ (p `eq'` zero) `and'` (w `eq'` one)
+          , not' $ n `eq'` fifteen
+          ]
+
+strdreg = [ not 31 28 0b1111
+          , constant 27 25 0b000
+          , any 24 23
+          , zeroed 22 22
+          , any 21 21
+          , constant 20 20 0
+          , reg 19 16
+          , reg 15 12
+          , any 11 8 -- unconstrained
+          , constant 7 4 0b1111
+          , reg 3 0
+          -- restrictions
+          , not' $ (p `eq'` zero) `or'` (w `eq'` one)
+          , not' $ m `eq'` fifteen
+          , not' $ (t `add'` one) `eq'` fifteen
+          ]
+
+strhimm = [ not 31 28 0b1111
+          , constant 27 25 0b000
+          , any 24 23
+          , constant 22 22 1
+          , any 21 21
+          , constant 20 20 0
+          , reg 19 16
+          , reg 15 12
+          , any 11 8 -- imm4H
+          , constant 7 4 0b1011
+          , any 3 0 -- imm4L
+            -- restrictions
+          , not' $ t `eq'` fifteen
+          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
+          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+          ]
+
+strhreg = [ not 31 28 0b1111
+          , constant 27 25 0b000
+          , any 24 23
+          , constant 22 22 0
+          , any 21 21
+          , constant 20 20 0
+          , reg 19 16
+          , reg 15 12
+          , any 11 8 -- unconstrained
+          , constant 7 4 0b1011
+          , reg 3 0
+          -- restrictions
+          , not' $ (t `eq'` fifteen) `or'` (m `eq'` fifteen)
+          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
+          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+          ]
+
 -- Atomic loads
 atomicLoad c = [ not 31 28 0b1111
                , constant 27 20 c
