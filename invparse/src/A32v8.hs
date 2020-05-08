@@ -18,6 +18,7 @@ p    = v 24 24
 w    = v 21 21
 zero = c 0
 one  = c 1
+fifteen = c 15
 n    = v 19 16
 t    = v 15 12
 
@@ -102,6 +103,26 @@ ldrbreg = [ not 31 28 0b1111
           , reg 3 0
           , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` c 15)
           , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+          ]
+
+ldrdimm = [ not 31 28 0b1111
+          , constant 27 25 0b000
+          , any 24 23
+          , constant 22 22 1
+          , any 21 21
+          , constant 20 20 0
+          , reg 19 16
+          , not 19 16 0b1111
+          , reg 15 12
+          , not 15 12 0
+          , any 11 8 -- imm4H
+          , constant 7 4 0b1101
+          , any 3 0 -- imm4L
+            -- restrictions
+          , not 15 12 0
+          , not' $ (p `eq'` zero) `and'` (w `eq'` one)
+          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` ((n `eq'` t) `or'` (n `eq'` (t `add'` one)))
+          , not' $ (t `add'` one) `eq'` fifteen
           ]
 
 -- Stores

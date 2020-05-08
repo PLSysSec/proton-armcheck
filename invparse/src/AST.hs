@@ -24,6 +24,7 @@ module AST ( Bits
            , or'
            , eq'
            , not'
+           , add'
            , tern'
            , Constraint(..)
            )
@@ -190,6 +191,10 @@ eq' _ _                     = error "Expected global constraint argument to eq"
 not' :: Bits -> Bits
 not' (Global c) = Global $ LogicalNot c
 
+add' :: Bits -> Bits -> Bits
+add' (Global c1) (Global c2) = Global $ Add c1 c2
+add' _ _ = error "Expected global constraint argument to add"
+
 tern' :: Bits -> Bits -> Bits -> Bits
 tern' (Global c1) (Global c2) (Global c3) = Global $ If c1 c2 c3
 tern' _ _ _                               = error "Expected global constraint argument to tern"
@@ -200,6 +205,7 @@ data GlobalConstraint = Num Int
                       | Neq GlobalConstraint GlobalConstraint
                       | And GlobalConstraint GlobalConstraint
                       | Or GlobalConstraint GlobalConstraint
+                      | Add GlobalConstraint GlobalConstraint
                       | LogicalNot GlobalConstraint
                       | If { ifCond  :: GlobalConstraint
                            , trueBr  :: GlobalConstraint
