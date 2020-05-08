@@ -21,18 +21,48 @@ one  = c 1
 n    = v 19 16
 t    = v 15 12
 
-ldr = [ not 31 28 0b1111
-      , constant 27 25 0b010
-      , any 24 23
-      , zeroed 22 22
-      , any 21 21
-      , constant 20 20 1
-      , reg 19 16
-      , not 19 16 0b1111
-      , reg 15 12
-      , any 11 0 -- imm12. what do we do here
-      , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
-      ]
+ldrimm = [ not 31 28 0b1111
+         , constant 27 25 0b010
+         , any 24 23
+         , zeroed 22 22
+         , any 21 21
+         , constant 20 20 1
+         , reg 19 16
+         , not 19 16 0b1111
+         , reg 15 12
+         , any 11 0 -- imm12. what do we do here
+         , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+         ]
+
+ldrlit = [ not 31 28 0b1111
+         , constant 27 25 0b010
+         , any 24 23
+         , zeroed 22 22
+         , any 21 21
+         , constant 20 16 0b11111
+         , reg 15 12
+         , any 11 0 -- imm12. what do we do here
+         , not' $ (p `eq'` zero) `or'` (w `eq'` one)
+         ]
+
+ldrreg = [ not 31 28 0b1111
+         , constant 27 25 0b011
+         , any 24 23
+         , zeroed 22 22
+         , any 21 21
+         , constant 20 20 1
+         , reg 19 16
+         , reg 15 12
+         , any 11 7 -- imm5
+         , any 6 5 -- stype
+         , constant 4 4 0
+         , reg 3 0
+         , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` c 15)
+         , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+         ]
+
+
+
 
 -- Stores
 
