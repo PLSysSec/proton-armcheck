@@ -16,7 +16,6 @@ module AST ( Bits
            , not
            , choice
            , range
-           , neq
            , Constraint(..)
            )
     where
@@ -95,7 +94,7 @@ data Bits = Bits { bits       :: Slice          -- constrain contiguous bits
           | Slices { slices     :: [Slice]      -- constrain non-contiguous bits
                    , constraint :: Constraint
                    }
-          | Global { constraint :: Constraint } -- constrain global properties
+          | Global { globConstraint :: GlobalConstraint } -- constrain global properties
        deriving (Eq, Ord, Show)
 
 -- | A slice of bits from high to low, INCLUSIVE
@@ -151,22 +150,40 @@ range high low start end = mkBits high low $ Range start end
 immedite :: Int -> Int -> Bits
 immedite high low = any high low
 
-neq :: Int -> Int -> Int -> Int -> Bits
-neq high1 low1 high2 low2 = Global $ Neq [Slice high1 low1, Slice high2 low2]
-
 data Constraint = Constant Int
                 | ConstantChoice [Int]
                 | Not Int
                 | Range { start :: Int
                         , end   :: Int
                         }
-                | Neq [Slice]
-                | Eq [Slice]
                 | Undefined
                 | Any
                 deriving (Eq, Ord, Show)
 
+(*&) :: Bits -> Bits -> Bits
+(*&) (Global c1) (Global c2) = Global $ And c1 c2
+(*&) _ _                     = error "Expected global constraint argument to and"
 
+orc :: Bits -> Bits -> Bits
+orc (Global c1) (Global c2) = Global $ Or c1 c2
+orc _ _                     = error "Expected global constraint argument to or"
+
+ifc :: Bits -> Bits -> Bits -> Bits
+ifc (Global c1) (Global c2) (Global c3) = Global $ If c1 c2 c3
+ifc _ _ _                               = error "Expected global constraint argument to or"
+
+data GlobalConstraint = Num Int
+                      | Var Slice
+                      | Eq GlobalConstraint GlobalConstraint
+                      | Neq GlobalConstraint GlobalConstraint
+                      | And GlobalConstraint GlobalConstraint
+                      | Or GlobalConstraint GlobalConstraint
+                      | LogicalNot GlobalConstraint
+                      | If { ifCond  :: GlobalConstraint
+                           , trueBr  :: GlobalConstraint
+                           , falseBr :: GlobalConstraint
+                           }
+                      deriving (Eq, Ord, Show)
 
 
 
