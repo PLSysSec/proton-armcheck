@@ -11,7 +11,7 @@ import           Prelude hiding (any, not)
 
 -- Memory:
 
--- Loads: ldr, ldrh, ldrsh, ldrb, ldrsb, ldrd
+-- Loads: ldr, ldrb, ldrd, ldrh, ldrsh, ldrsb
 -- Stores: str, strh, strb, strd
 
 p    = v 24 24
@@ -163,6 +163,24 @@ ldrdreg = [ not 31 28 0b1111
           , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` c 15)
           , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
           , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` (t `add'` one))
+          ]
+
+ldrhimm = [ not 31 28 0b1111
+          , constant 27 25 0b000
+          , any 24 23
+          , constant 22 22 1
+          , any 21 21
+          , constant 20 20 1
+          , reg 19 16
+          , not 19 16 0b1111
+          , reg 15 12
+          , not 15 12 0
+          , any 11 8 -- imm4H
+          , constant 7 4 0b1011
+          , any 3 0 -- imm4L
+            -- restrictions
+          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+          , not' $ (t `add'` one) `eq'` fifteen
           ]
 
 -- Stores
