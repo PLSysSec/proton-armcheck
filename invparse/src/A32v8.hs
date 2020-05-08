@@ -12,7 +12,6 @@ import           Prelude hiding (any, not)
 -- Memory:
 
 -- Loads: ldr, ldrb, ldrd, ldrh, ldrsh, ldrsb
--- Stores: str, strh, strb, strd
 
 p    = v 24 24
 w    = v 21 21
@@ -316,8 +315,56 @@ ldrshreg = [ not 31 28 0b1111
            , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
            , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
            ]
--- Stores
 
+-- Stores
+-- Stores: str, strh, strb, strd
+
+strimm = [ not 31 28 0b1111
+         , constant 27 25 0b010
+         , any 24 23
+         , zeroed 22 22
+         , any 21 21
+         , constant 20 20 0
+         , reg 19 16
+         , reg 15 12
+         , any 11 0 -- imm12. what do we do here
+         -- restrictions
+         , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+         , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
+         ]
+
+strreg = [ not 31 28 0b1111
+         , constant 27 25 0b011
+         , any 24 23
+         , zeroed 22 22
+         , any 21 21
+         , constant 20 20 0
+         , reg 19 16
+         , reg 15 12
+         , any 11 7 -- imm5
+         , any 6 5 -- stype
+         , constant 4 4 0
+         , reg 3 0
+         -- restrictions
+         , not' $ m `eq'` fifteen
+         , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
+         , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+         ]
+
+strbimm = [ not 31 28 0b1111
+          , constant 27 25 0b010
+          , any 24 23
+          , constant 22 22 1
+          , any 21 21
+          , constant 20 20 0
+          , reg 19 16
+          , reg 15 12
+          , any 11 0 -- imm12. what do we do here
+          -- restrictions
+          , not' $ t `eq'` fifteen
+          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
+          ]
 
 -- Are we worried about: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.kui0100a/armasm_cihbghef.htm
 -- Atomic loads
