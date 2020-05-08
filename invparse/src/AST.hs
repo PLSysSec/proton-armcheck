@@ -16,6 +16,15 @@ module AST ( Bits
            , not
            , choice
            , range
+           -- * Helpers for building for complex constraints on instructions,
+           -- * Over all bits in the instruction
+           , c -- constant
+           , v -- variable
+           , and'
+           , or'
+           , eq'
+           , not'
+           , tern'
            , Constraint(..)
            )
     where
@@ -160,17 +169,30 @@ data Constraint = Constant Int
                 | Any
                 deriving (Eq, Ord, Show)
 
-(*&) :: Bits -> Bits -> Bits
-(*&) (Global c1) (Global c2) = Global $ And c1 c2
-(*&) _ _                     = error "Expected global constraint argument to and"
+c :: Int -> Bits
+c v = Global $ Num v
 
-orc :: Bits -> Bits -> Bits
-orc (Global c1) (Global c2) = Global $ Or c1 c2
-orc _ _                     = error "Expected global constraint argument to or"
+v :: Int -> Int -> Bits
+v h l = Global $ Var $ Slice h l
 
-ifc :: Bits -> Bits -> Bits -> Bits
-ifc (Global c1) (Global c2) (Global c3) = Global $ If c1 c2 c3
-ifc _ _ _                               = error "Expected global constraint argument to or"
+and' :: Bits -> Bits -> Bits
+and' (Global c1) (Global c2) = Global $ And c1 c2
+and' _ _                     = error "Expected global constraint argument to and"
+
+or' :: Bits -> Bits -> Bits
+or' (Global c1) (Global c2) = Global $ Or c1 c2
+or' _ _                     = error "Expected global constraint argument to or"
+
+eq' :: Bits -> Bits -> Bits
+eq' (Global c1) (Global c2) = Global $ Or c1 c2
+eq' _ _                     = error "Expected global constraint argument to eq"
+
+not' :: Bits -> Bits
+not' (Global c) = Global $ LogicalNot c
+
+tern' :: Bits -> Bits -> Bits -> Bits
+tern' (Global c1) (Global c2) (Global c3) = Global $ If c1 c2 c3
+tern' _ _ _                               = error "Expected global constraint argument to tern"
 
 data GlobalConstraint = Num Int
                       | Var Slice
