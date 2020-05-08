@@ -61,7 +61,19 @@ ldrreg = [ not 31 28 0b1111
          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
          ]
 
-
+ldrb = [ not 31 28 0b1111
+       , constant 27 25 0b010
+       , any 24 23
+       , constant 22 22 1
+       , any 21 21
+       , constant 20 20 1
+       , reg 19 16
+       , not 19 16 0b1111
+       , reg 15 12
+       , not 15 12 15
+       , any 11 0 -- imm12. what do we do here
+       , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+       ]
 
 
 -- Stores
