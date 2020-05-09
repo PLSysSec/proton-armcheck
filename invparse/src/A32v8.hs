@@ -5,42 +5,42 @@ import           Prelude hiding (any, not)
 
 a32v8instrs :: [(Instruction, String)]
 a32v8instrs = map (\i -> (instr $ fst i, snd i)) [ (ldrimm, "ldrdimm")
-                                                 -- , (ldrlit, "ldrlit")
-                                                 -- , (ldrreg, "ldrreg")
-                                                 -- , (ldrbimm, "ldrbimm")
-                                                 -- , (ldrblit, "ldrblit")
-                                                 -- , (ldrbreg, "ldrbreg")
-                                                 -- , (ldrdimm, "ldrdimm")
-                                                 -- , (ldrdlit, "ldrdlit")
-                                                 -- , (ldrdreg, "ldrdreg")
-                                                 -- , (ldrhimm, "ldrhimm")
-                                                 -- , (ldrhlit, "ldrhlit")
-                                                 -- , (ldrhreg, "ldrhreg")
-                                                 -- , (ldrsbimm, "ldrsbimm")
-                                                 -- , (ldrsblit, "ldrsblit")
-                                                 -- , (ldrsbreg, "ldrsbreg")
-                                                 -- , (ldrshimm, "ldrshimm")
-                                                 -- , (ldrshlit, "ldrshlit")
-                                                 -- , (ldrshreg, "ldrshreg")
-                                                 -- -- stores
-                                                 -- , (strimm, "strimm")
-                                                 -- , (strreg, "strreg")
-                                                 -- , (strhimm, "strhimm")
-                                                 -- , (strhreg, "strhreg")
-                                                 -- , (strbimm, "strbimm")
-                                                 -- , (strbreg, "strbreg")
-                                                 -- , (strdimm, "strdimm")
-                                                 -- , (strdreg, "strdreg")
-                                                 -- -- atomic loads
-                                                 -- , (ldrex, "ldrex")
-                                                 -- , (ldrexb, "ldrexb")
-                                                 -- , (ldrexd, "ldrexd")
-                                                 -- , (ldrexh, "ldrexh")
-                                                 -- -- atomic stores
-                                                 -- , (strex, "strex")
-                                                 -- , (strexb, "strexb")
-                                                 -- , (strexd, "strexd")
-                                                 -- , (strexh, "strexh")
+                                                 , (ldrlit, "ldrlit")
+                                                 , (ldrreg, "ldrreg")
+                                                 , (ldrbimm, "ldrbimm")
+                                                 , (ldrblit, "ldrblit")
+                                                 , (ldrbreg, "ldrbreg")
+                                                 , (ldrdimm, "ldrdimm")
+                                                 , (ldrdlit, "ldrdlit")
+                                                 , (ldrdreg, "ldrdreg")
+                                                 , (ldrhimm, "ldrhimm")
+                                                 , (ldrhlit, "ldrhlit")
+                                                 , (ldrhreg, "ldrhreg")
+                                                 , (ldrsbimm, "ldrsbimm")
+                                                 , (ldrsblit, "ldrsblit")
+                                                 , (ldrsbreg, "ldrsbreg")
+                                                 , (ldrshimm, "ldrshimm")
+                                                 , (ldrshlit, "ldrshlit")
+                                                 , (ldrshreg, "ldrshreg")
+                                                 -- stores
+                                                 , (strimm, "strimm")
+                                                 , (strreg, "strreg")
+                                                 , (strhimm, "strhimm")
+                                                 , (strhreg, "strhreg")
+                                                 , (strbimm, "strbimm")
+                                                 , (strbreg, "strbreg")
+                                                 , (strdimm, "strdimm")
+                                                 , (strdreg, "strdreg")
+                                                 -- atomic loads
+                                                 , (ldrex, "ldrex")
+                                                 , (ldrexb, "ldrexb")
+                                                 , (ldrexd, "ldrexd")
+                                                 , (ldrexh, "ldrexh")
+                                                 -- atomic stores
+                                                 , (strex, "strex")
+                                                 , (strexb, "strexb")
+                                                 , (strexd, "strexd")
+                                                 , (strexh, "strexh")
                                                  ]
 
 
@@ -111,9 +111,9 @@ ldrbimm = [ not 31 28 0b1111
           , any 21 21
           , constant 20 20 1
           , reg 19 16
-          , not 19 16 0b1111
+--          , not 19 16 0b1111
           , reg 15 12
-          , not 15 12 15
+--          , not 15 12 15
           , any 11 0 -- imm12. what do we do here
           , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
           ]
@@ -126,7 +126,7 @@ ldrblit = [ not 31 28 0b1111
           , constant 20 20 1
           , constant 19 16 0b1111
           , reg 15 12
-          , not 15 12 15
+--          , not 15 12 15
           , any 11 0 -- imm12. what do we do here
           , not' $ (p `eq'` zero) `or'` (w `eq'` one)
           ]
@@ -154,14 +154,14 @@ ldrdimm = [ not 31 28 0b1111
           , any 21 21
           , constant 20 20 0
           , reg 19 16
-          , not 19 16 0b1111
+--          , not 19 16 0b1111
           , reg 15 12
-          , not 15 12 0
+--          , not 15 12 0
           , any 11 8 -- imm4H
           , constant 7 4 0b1101
           , any 3 0 -- imm4L
             -- restrictions
-          , not 15 12 0
+--          , not 15 12 0
           , not' $ (p `eq'` zero) `and'` (w `eq'` one)
           , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` ((n `eq'` t) `or'` (n `eq'` (t `add'` one)))
           , not' $ (t `add'` one) `eq'` fifteen
@@ -175,12 +175,12 @@ ldrdlit = [ not 31 28 0b1111
           , constant 20 20 0
           , constant 19 16 0b1111
           , reg 15 12
-          , not 15 12 14
+--          , not 15 12 14
           , any 11 8 -- imm4H
           , constant 7 4 0b1101
           , any 3 0 -- imm4L
             -- restrictions
-          , not 12 12 1 -- not Rt<0> == 1
+--          , not 12 12 1 -- not Rt<0> == 1
           ]
 
 ldrdreg = [ not 31 28 0b1111
@@ -195,7 +195,7 @@ ldrdreg = [ not 31 28 0b1111
           , constant 7 4 0b1101
           , reg 3 0
           -- restrictions
-          , not 12 12 1 -- not Rt<0> == 1
+--          , not 12 12 1 -- not Rt<0> == 1
           , not' $ (p `eq'` zero) `and'` (w `eq'` one)
           , not' $ m `eq'` fifteen
           , not' $ t `eq'` (c 14)
@@ -213,9 +213,9 @@ ldrhimm = [ not 31 28 0b1111
           , any 21 21
           , constant 20 20 1
           , reg 19 16
-          , not 19 16 0b1111
+--          , not 19 16 0b1111
           , reg 15 12
-          , not 15 12 0
+--          , not 15 12 0
           , any 11 8 -- imm4H
           , constant 7 4 0b1011
           , any 3 0 -- imm4L
@@ -252,7 +252,7 @@ ldrhreg = [ not 31 28 0b1111
           , constant 7 4 0b1011
           , reg 3 0
           -- restrictions
-          , not 12 12 1 -- not Rt<0> == 1
+--          , not 12 12 1 -- not Rt<0> == 1
           , not' $ (t `eq'` fifteen) `or'` (m `eq'` fifteen)
           , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
           , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
@@ -265,7 +265,7 @@ ldrsbimm = [ not 31 28 0b1111
            , any 21 21
            , constant 20 20 1
            , reg 19 16
-           , not 19 16 0b1111
+--           , not 19 16 0b1111
            , reg 15 12
            , any 11 8 -- imm4H
            , constant 7 4 0b1101
@@ -315,7 +315,7 @@ ldrshimm = [ not 31 28 0b1111
            , any 21 21
            , constant 20 20 1
            , reg 19 16
-           , not 19 16 0b1111
+--           , not 19 16 0b1111
            , reg 15 12
            , any 11 8 -- imm4H
            , constant 7 4 0b1111
@@ -435,7 +435,7 @@ strdimm = [ not 31 28 0b1111
           , constant 20 20 0
           , reg 19 16
           , reg 15 12
-          , not 15 12 0
+--          , not 15 12 0
           , any 11 8 -- imm4H
           , constant 7 4 0b1111
           , any 3 0 -- imm4L
