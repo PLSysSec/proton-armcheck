@@ -22,6 +22,8 @@ module AST ( Bits(..)
            -- * Over all bits in the instruction
            , c -- constant
            , v -- variable
+           , neqc'
+           , eqc'
            , and'
            , or'
            , eq'
@@ -182,6 +184,14 @@ c v = Global $ Num v
 v :: Int -> Int -> Bits
 v h l = Global $ Var $ Slice h l
 
+-- | Not equal a constant
+neqc' :: Int -> Int -> Int -> Bits
+neqc' hi lo val = (v hi lo) `neq'` (c val)
+
+-- | Equal a constant
+eqc' :: Int -> Int -> Int -> Bits
+eqc' hi lo val = (v hi lo) `eq'` (c val)
+
 and' :: Bits -> Bits -> Bits
 and' (Global c1) (Global c2) = Global $ And c1 c2
 and' _ _                     = error "Expected global constraint argument to and"
@@ -190,8 +200,12 @@ or' :: Bits -> Bits -> Bits
 or' (Global c1) (Global c2) = Global $ Or c1 c2
 or' _ _                     = error "Expected global constraint argument to or"
 
+neq' :: Bits -> Bits -> Bits
+neq' (Global c1) (Global c2) = Global $ Neq c1 c2
+neq' _ _                     = error "Expected global constraint argument to eq"
+
 eq' :: Bits -> Bits -> Bits
-eq' (Global c1) (Global c2) = Global $ Or c1 c2
+eq' (Global c1) (Global c2) = Global $ Eq c1 c2
 eq' _ _                     = error "Expected global constraint argument to eq"
 
 not' :: Bits -> Bits
