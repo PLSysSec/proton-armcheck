@@ -3,45 +3,45 @@ module A32v8 (a32v8instrs) where
 import           AST
 import           Prelude hiding (any, not)
 
-a32v8instrs :: [Instruction]
-a32v8instrs = map instr [ ldrimm
-                        , ldrlit
-                        , ldrreg
-                        , ldrbimm
-                        , ldrblit
-                        , ldrbreg
-                        , ldrdimm
-                        , ldrdlit
-                        , ldrdreg
-                        , ldrhimm
-                        , ldrhlit
-                        , ldrhreg
-                        , ldrsbimm
-                        , ldrsblit
-                        , ldrsbreg
-                        , ldrshimm
-                        , ldrshlit
-                        , ldrshreg
-                          -- stores
-                        , strimm
-                        , strreg
-                        , strhimm
-                        , strhreg
-                        , strbimm
-                        , strbreg
-                        , strdimm
-                        , strdreg
-                        -- atomic loads
-                        , ldrex
-                        , ldrexb
-                        , ldrexd
-                        , ldrexh
-                        -- atomic stores
-                        , strex
-                        , strexb
-                        , strexd
-                        , strexh
-                        ]
+a32v8instrs :: [(Instruction, String)]
+a32v8instrs = map (\i -> (instr $ fst i, snd i)) [ (ldrimm, "ldrdimm")
+                                                 -- , (ldrlit, "ldrlit")
+                                                 -- , (ldrreg, "ldrreg")
+                                                 -- , (ldrbimm, "ldrbimm")
+                                                 -- , (ldrblit, "ldrblit")
+                                                 -- , (ldrbreg, "ldrbreg")
+                                                 -- , (ldrdimm, "ldrdimm")
+                                                 -- , (ldrdlit, "ldrdlit")
+                                                 -- , (ldrdreg, "ldrdreg")
+                                                 -- , (ldrhimm, "ldrhimm")
+                                                 -- , (ldrhlit, "ldrhlit")
+                                                 -- , (ldrhreg, "ldrhreg")
+                                                 -- , (ldrsbimm, "ldrsbimm")
+                                                 -- , (ldrsblit, "ldrsblit")
+                                                 -- , (ldrsbreg, "ldrsbreg")
+                                                 -- , (ldrshimm, "ldrshimm")
+                                                 -- , (ldrshlit, "ldrshlit")
+                                                 -- , (ldrshreg, "ldrshreg")
+                                                 -- -- stores
+                                                 -- , (strimm, "strimm")
+                                                 -- , (strreg, "strreg")
+                                                 -- , (strhimm, "strhimm")
+                                                 -- , (strhreg, "strhreg")
+                                                 -- , (strbimm, "strbimm")
+                                                 -- , (strbreg, "strbreg")
+                                                 -- , (strdimm, "strdimm")
+                                                 -- , (strdreg, "strdreg")
+                                                 -- -- atomic loads
+                                                 -- , (ldrex, "ldrex")
+                                                 -- , (ldrexb, "ldrexb")
+                                                 -- , (ldrexd, "ldrexd")
+                                                 -- , (ldrexh, "ldrexh")
+                                                 -- -- atomic stores
+                                                 -- , (strex, "strex")
+                                                 -- , (strexb, "strexb")
+                                                 -- , (strexd, "strexd")
+                                                 -- , (strexh, "strexh")
+                                                 ]
 
 
 -- F5 in the manual
@@ -63,16 +63,17 @@ n    = v 19 16
 t    = v 15 12
 m    = v 3 0
 
-ldrimm = [ not 31 28 0b1111
-         , constant 27 25 0b010
-         , any 24 23
-         , zeroed 22 22
-         , any 21 21
-         , constant 20 20 1
+ldrimm = [ not 31 28 0b1111     -- XXXX
+         , constant 27 25 0b010 -- 010
+         , any 24 23            -- XX
+         , zeroed 22 22         -- 0
+         , any 21 21            -- X
+         , constant 20 20 1     -- 1
          , reg 19 16
-         , not 19 16 0b1111
+--         , not 19 16 0b1111
          , reg 15 12
-         , any 11 0 -- imm12. what do we do here
+         , any 11 0 -- imm12.
+         -- restrictions
          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
          ]
 
