@@ -1,7 +1,12 @@
 module Lib
     ( someFunc
     ) where
-import           Parse
+import           A32v8
+import           AST
+import           Codegen
+import           Control.Monad (forM_)
 
 someFunc :: IO ()
-someFunc = putStrLn "someFunc"
+someFunc = do
+  forM_ a32v8instrs $ \instr -> do
+    print $ genConstantMatchInstr instr

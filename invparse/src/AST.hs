@@ -1,5 +1,7 @@
 {-# LANGUAGE BinaryLiterals #-}
-module AST ( Bits
+module AST ( Bits(..)
+           , Slice(..)
+           , Instruction(..)
            , instr
            -- * Instruction building helpers
            , threeArgInstr -- Three argument instruction
@@ -32,7 +34,7 @@ module AST ( Bits
 import           Prelude hiding (any, not)
 
 -- | An ARM instruction encoding is just some constraints over bits
-data Instruction = Instruction [Bits]
+data Instruction = Instruction { allBits :: [Bits] }
                  deriving (Eq, Ord, Show)
 
 -- | Make a new instruction. This will have some safeguards

@@ -1,7 +1,48 @@
 {-# LANGUAGE BinaryLiterals #-}
-module A32v8 where
+module A32v8 (a32v8instrs) where
 import           AST
 import           Prelude hiding (any, not)
+
+a32v8instrs :: [Instruction]
+a32v8instrs = map instr [ ldrimm
+                        , ldrlit
+                        , ldrreg
+                        , ldrbimm
+                        , ldrblit
+                        , ldrbreg
+                        , ldrdimm
+                        , ldrdlit
+                        , ldrdreg
+                        , ldrhimm
+                        , ldrhlit
+                        , ldrhreg
+                        , ldrsbimm
+                        , ldrsblit
+                        , ldrsbreg
+                        , ldrshimm
+                        , ldrshlit
+                        , ldrshreg
+                          -- stores
+                        , strimm
+                        , strreg
+                        , strhimm
+                        , strhreg
+                        , strbimm
+                        , strbreg
+                        , strdimm
+                        , strdreg
+                        -- atomic loads
+                        , ldrex
+                        , ldrexb
+                        , ldrexd
+                        , ldrexh
+                        -- atomic stores
+                        , strex
+                        , strexb
+                        , strexd
+                        , strexh
+                        ]
+
 
 -- F5 in the manual
 
@@ -463,10 +504,10 @@ atomicLoad c = [ not 31 28 0b1111
                , any 3 0
                ]
 
-ldrex = instr $ atomicLoad 0b00011001
-ldrexb = instr $ atomicLoad 0b00011101
-ldrexd = instr $ atomicLoad 0b00011011 -- and Rt<0> == 1, Rt in range 15-12
-ldrexh = instr $ atomicLoad 0b00011111
+ldrex = atomicLoad 0b00011001
+ldrexb = atomicLoad 0b00011101
+ldrexd = atomicLoad 0b00011011 -- and Rt<0> == 1, Rt in range 15-12
+ldrexh = atomicLoad 0b00011111
 
 -- Atomic stores
 atomicStore c = [ not 31 28 0b1111
@@ -480,10 +521,10 @@ atomicStore c = [ not 31 28 0b1111
                 -- , neq 19 16 3 0
                 ]
 
-strex = instr $ atomicStore 0b00011000
-strexb = instr $ atomicStore 0b00011100
-strexd = instr $ atomicStore 0b00011010 -- and Rt<0> == 1, Rt in in range 3-0
-strexh = instr $ atomicStore 0b00011110
+strex  = atomicStore 0b00011000
+strexb = atomicStore 0b00011100
+strexd = atomicStore 0b00011010 -- and Rt<0> == 1, Rt in in range 3-0
+strexh = atomicStore 0b00011110
 
 -- Helpers:
 
