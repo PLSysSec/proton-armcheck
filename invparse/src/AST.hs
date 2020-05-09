@@ -101,9 +101,6 @@ threeArgSr op r1 r2 r3 = instr [ constant 31 24 op
 data Bits = Bits { bits       :: Slice          -- constrain contiguous bits
                  , constraint :: Constraint
                  }
-          | Slices { slices     :: [Slice]      -- constrain non-contiguous bits
-                   , constraint :: Constraint
-                   }
           | Global { globConstraint :: GlobalConstraint } -- constrain global properties
        deriving (Eq, Ord, Show)
 
