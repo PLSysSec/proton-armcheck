@@ -37,9 +37,16 @@ import           Prelude hiding (any, not)
 data Instruction = Instruction { allBits :: [Bits] }
                  deriving (Eq, Ord, Show)
 
--- | Make a new instruction. This will have some safeguards
+-- | Make a new instruction
 instr :: [Bits] -> Instruction
-instr = Instruction
+instr bits = Instruction $ checkBits 32 bits []
+  where
+    checkBits :: Int -> [Bits] -> [Bits] -> [Bits]
+    checkBits _ [] instrs                  = instrs
+    checkBits lastSlice (bits:rest) instrs = case bits of
+      Global {} -> checkBits lastSlice rest (bits:instrs)
+      Bits bs _ | lastSlice <= high bs -> error "Disallowed instr construction"
+      Bits bs _ -> checkBits (low bs) rest (bits:instrs)
 
 ---
 --- Some helpers for standard kinds of instructions

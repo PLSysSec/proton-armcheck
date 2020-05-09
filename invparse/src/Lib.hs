@@ -14,6 +14,7 @@ someFunc = do
   putStrLn "Getting match strings and checking for 32 bit lengths"
   strings <- forM a32v8instrs $ \(instr, name) -> do
     let str = bitstring $ genConstantMatchInstr instr
+    print str
     unless (length str == 32) $ error $ unwords [ "Bad bitstring"
                                                 , name
                                                 , ":"
