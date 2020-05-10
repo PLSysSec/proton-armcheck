@@ -6,6 +6,7 @@ from collections import deque
 
 # decision tree node / leaf object
 class TreeNode(object):
+    names = {}
     values = []
     posn = None
     left = None
@@ -25,7 +26,7 @@ class TreeNode(object):
             offset = 2
 
         if self.is_leaf():
-            print(" ", self.values, sep='')
+            print(" ", [ TreeNode.names[v] for v in self.values ], sep='')
             return
         print()
 
@@ -42,7 +43,13 @@ class TreeNode(object):
 # read in instructions file
 def read_instrs(infile):
     with open(infile, 'r') as f:
-        return [ l.strip() for l in f.readlines() ]
+        ni = [ l.strip().split() for l in f.readlines() ]
+    ret = []
+    TreeNode.names.clear()
+    for (n, i) in ni:
+        TreeNode.names[i] = n[:-1]
+        ret.append(i)
+    return ret
 
 # how many different values are there across all instructions at a given position?
 def num_opts(instrs, posn):
