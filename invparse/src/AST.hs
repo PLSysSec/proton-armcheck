@@ -31,6 +31,7 @@ module AST ( Bits(..)
            , add'
            , tern'
            , Constraint(..)
+           , GlobalConstraint(..)
            )
     where
 import           Prelude hiding (any, not)
@@ -200,6 +201,7 @@ or' :: Bits -> Bits -> Bits
 or' (Global c1) (Global c2) = Global $ Or c1 c2
 or' _ _                     = error "Expected global constraint argument to or"
 
+-- | enforce well-formed-ness
 neq' :: Bits -> Bits -> Bits
 neq' (Global c1) (Global c2) = Global $ Neq c1 c2
 neq' _ _                     = error "Expected global constraint argument to eq"
@@ -220,7 +222,7 @@ tern' (Global c1) (Global c2) (Global c3) = Global $ If c1 c2 c3
 tern' _ _ _                               = error "Expected global constraint argument to tern"
 
 data GlobalConstraint = Num Int
-                      | Var Slice
+                      | Var { slice :: Slice }
                       | Eq GlobalConstraint GlobalConstraint
                       | Neq GlobalConstraint GlobalConstraint
                       | And GlobalConstraint GlobalConstraint
