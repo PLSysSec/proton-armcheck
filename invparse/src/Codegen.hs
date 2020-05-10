@@ -162,8 +162,10 @@ genUnary ref op c
   | isVar c = error "You shouldn't really be notting a var either? I mean I guess but"
   | otherwise = do
       test' <- genComplexConstraint ref c
+      varTemp <- readIORef ref
+      modifyIORef' ref (+ 1)
       let (Test t) = head test'
-          tvar     = Temp "t"
+          tvar     = Temp $ "t" ++ show varTemp
           temp     = mkAssign tvar t
           newTest  = mkTest $ mkUnOp op tvar
       return $ [newTest, temp] ++ tail test'
@@ -176,12 +178,16 @@ genOp ref op c1 c2
     | isVar c1 && isVar c2 = return $ genOpWithVars op c1 c2
     | otherwise = do
         test1 <- genComplexConstraint ref c1
+        varTemp1 <- readIORef ref
+        modifyIORef' ref (+ 1)
         let (Test t1) = head test1
-            tvar1     = Temp "t1"
+            tvar1     = Temp $ "t" ++ show varTemp1
             temp1     = mkAssign tvar1 t1
         test2 <- genComplexConstraint ref c2
+        varTemp2 <- readIORef ref
+        modifyIORef' ref (+ 1)
         let (Test t2) = head test2
-            tvar2     = Temp "t2"
+            tvar2     = Temp $ "t" ++ show varTemp2
             temp2     = mkAssign tvar2 t2
             newTest   = mkTest $ mkBinOp tvar1 op tvar2
         return $ [newTest, temp1, temp2] ++ tail test1 ++ tail test2
