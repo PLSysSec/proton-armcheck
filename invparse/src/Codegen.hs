@@ -62,6 +62,7 @@ data BitTest = Test { left  :: Var
                       , op    :: Op
                       , right:: Var
                       }
+             | Wrapped Var
              deriving (Eq, Ord, Show)
 
 data Var = Temp String
@@ -69,39 +70,59 @@ data Var = Temp String
          | Encoding
          deriving (Eq, Ord, Show)
 
-data Op = Matc
-        | AndBits
-        | ShiftBits
+data Op = AndBits
         | OrBits
         | XorBits
+        | ShiftBits
+        | PlusBits
         deriving (Eq, Ord, Show)
 
 genConstraint :: GlobalConstraint -> BitTest
 genConstraint gc =
   case gc of
-    Num{}     -> error "Did not expect num as top level constraint"
-    Var{}     -> error "Did not expect var as top level constraint"
-    Eq c1 c2  -> head $ genEq True c1 c2
-    Neq c1 c2 -> head $ genEq False c1 c2
-    And c1 c2 -> head $ genAnd c1 c2
+    Num n     -> Wrapped $ Val n
+    Var slice -> error $ show $ genVar slice
+    -- Eq c1 c2  -> head $ genEq True c1 c2
+    -- Neq c1 c2 -> head $ genEq False c1 c2
+    And c1 c2 -> head $ genBinOp AndBits c1 c2
     _         -> error ""
 
+genOp :: Op -> GlobalConstraint -> GlobalConstraint -> [BitTest]
+genOp op c1 c2
+    | isNum c1 && isNum c2 = error "You shouldn't be making all-const constraints idiot"
+    | isVar c1 && isNum c2 = genOpWithConst op c1 c2
+    | isNum c1 && isVar c2 = genOpWithConst op c2 c1
+    | otherwise = error "not done"
 
-genAnd :: GlobalConstraint -> GlobalConstraint -> [BitTest]
-genAnd c1 c2 = error ""
+genOpWithConst :: Op
+               -> GlobalConstraint -- ^ The variable
+               -> GlobalConstraint -- ^ The number
+               -> [BitTest]
+genOpWithConst op var num
+  | isVar var && isNum num =
+      -- Shift the constant to be even with the value, then do the test
+      [Test Encoding op $ Val $ (val num) `shiftL` low (slice var)]
+  | otherwise = error "Malformed inputs to genOpWithConst"
 
-genEq :: Bool -> GlobalConstraint -> GlobalConstraint -> [BitTest]
-genEq eq c1 c2 =
-  case c2 of
-    Num val    -> [Test Encoding AndBits $ Val $ val `shiftL` low (slice c1)]
-    Var slice2 ->
-      -- Make temporaries for the variables
-      let (var1, name1) = genVar $ slice c1
-          (var2, name2) = genVar slice2
-          op            = if eq then AndBits else XorBits
-      -- Actually do the equality test
-      in var1 ++ var2 ++ [Test name1 op name2]
-    _          -> error ""
+genOpWithVars :: Op
+              -> GlobalConstraint -- ^ Variable
+              -> GlobalConstraint -- ^ Other variable
+              -> [BitTest]
+genOpWithVars op var1 var2
+    | isVar var1 && isVar var2 =
+        let (v1, name1) = genVar $ slice var1
+            (v2, name2) = genVar $ slice var2
+        in v1 ++ v2 ++ [Test name1 op name2]
+    | otherwise = error "Malformed inputs to genOpWithVars"
+
+genBinOp :: Op -> GlobalConstraint -> GlobalConstraint -> [BitTest]
+genBinOp = undefined
+
+genNot :: GlobalConstraint -> [BitTest]
+genNot = undefined
+
+
+--- Variables
 
 -- | Use the slice numbers to zero out only the bits in the slice.
 -- | Return an and of the sliced out shit, shifted all the way left.
@@ -113,24 +134,4 @@ genVar slice =
       shiftMask    = Assign shiftMaskVar andMaskVar ShiftBits undefined
   in ([andMask, shiftMask], shiftMaskVar)
 
--- may not need these guys
-
-make32BitBinaryString :: Slice -> Int -> String
-make32BitBinaryString s val =
-  let leftZeros  = replicate (32 - high s) '0'
-      middleVal  = makeBinaryString s val
-      rightZeros = replicate (low s) '0'
-  in leftZeros ++ middleVal ++ rightZeros
-
-makeBinaryString :: Slice -> Int -> String
-makeBinaryString s val =
-  let len = high s - low s + 1
-      str = showIntAtBase 2 intToDigit val ""
-  in if length str > len
-     then error $ unwords [ "Overly long string:"
-                          , str
-                          , ". Expected"
-                          , show s
-                          ]
-     else replicate (len - length str) '0' ++ str
 

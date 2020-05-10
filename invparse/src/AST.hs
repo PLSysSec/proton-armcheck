@@ -29,9 +29,10 @@ module AST ( Bits(..)
            , eq'
            , not'
            , add'
-           , tern'
            , Constraint(..)
            , GlobalConstraint(..)
+           , isVar
+           , isNum
            )
     where
 import           Prelude hiding (any, not)
@@ -217,11 +218,7 @@ add' :: Bits -> Bits -> Bits
 add' (Global c1) (Global c2) = Global $ Add c1 c2
 add' _ _ = error "Expected global constraint argument to add"
 
-tern' :: Bits -> Bits -> Bits -> Bits
-tern' (Global c1) (Global c2) (Global c3) = Global $ If c1 c2 c3
-tern' _ _ _                               = error "Expected global constraint argument to tern"
-
-data GlobalConstraint = Num Int
+data GlobalConstraint = Num { val :: Int }
                       | Var { slice :: Slice }
                       | Eq GlobalConstraint GlobalConstraint
                       | Neq GlobalConstraint GlobalConstraint
@@ -229,12 +226,15 @@ data GlobalConstraint = Num Int
                       | Or GlobalConstraint GlobalConstraint
                       | Add GlobalConstraint GlobalConstraint
                       | LogicalNot GlobalConstraint
-                      | If { ifCond  :: GlobalConstraint
-                           , trueBr  :: GlobalConstraint
-                           , falseBr :: GlobalConstraint
-                           }
                       deriving (Eq, Ord, Show)
 
+isVar :: GlobalConstraint -> Bool
+isVar Var{} = True
+isVar _     = False
+
+isNum :: GlobalConstraint -> Bool
+isNum Num{} = True
+isNum _     = False
 
 
 

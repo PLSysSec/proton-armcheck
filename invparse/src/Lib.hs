@@ -26,6 +26,8 @@ someFunc = do
                                                 ]
     return str
   print "Done."
+
+
   -- None of the match strings should be the same. We can afford to do this
   -- slowly and dumbly
   -- putStrLn "Checking for overlapping bitpatterns"
