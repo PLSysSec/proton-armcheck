@@ -31,7 +31,7 @@ genConstantMatchInstr :: (Instruction, String) -> IO InstrMatch
 genConstantMatchInstr (inst, name) = do
   bstr <- mapM genInstrMatch $ reverse $ allBits inst
   let bitstring = concat $ catMaybes bstr
-      tests     = map genComplexConstraint $ complexConstraints inst
+  tests <- mapM genComplexConstraint $ complexConstraints inst
   return $ InstrMatch name bitstring (map mkConstraint tests)
 
 genInstrMatch :: Bits -> IO (Maybe BitStr)
@@ -135,14 +135,14 @@ instance Show Op where
     show ShiftBits = "<<"
     show AddBits   = "+"
     show NotBits   = "~"
-    show EqBits    = "=="
-    show NeqBits   = "!="
+    show EqBits    = "&"
+    show NeqBits   = "^"
 
 ---
 --- Generating bittests
 ---
 
-genComplexConstraint :: GlobalConstraint -> [BitTest]
+genComplexConstraint :: GlobalConstraint -> IO [BitTest]
 genComplexConstraint gc =
   case gc of
     Num{}        -> error "Num is not a complex constraint"
@@ -154,35 +154,35 @@ genComplexConstraint gc =
     Add c1 c2    -> genOp AddBits c1 c2
     LogicalNot c -> genUnary NotBits c
 
-genUnary :: Op -> GlobalConstraint -> [BitTest]
+genUnary :: Op -> GlobalConstraint -> IO [BitTest]
 genUnary op c
   | isNum c = error "You shouldn't be not-ing a constant idiot"
   | isVar c = error "You shouldn't really be notting a var either? I mean I guess but"
-  | otherwise =
-      let test'    = genComplexConstraint c
-          (Test t) = head test'
+  | otherwise = do
+      test' <- genComplexConstraint c
+      let (Test t) = head test'
           tvar     = Temp "t"
           temp     = mkAssign tvar t
           newTest  = mkTest $ mkUnOp op tvar
-      in [newTest, temp] ++ tail test'
+      return $ [newTest, temp] ++ tail test'
 
-genOp :: Op -> GlobalConstraint -> GlobalConstraint -> [BitTest]
+genOp :: Op -> GlobalConstraint -> GlobalConstraint -> IO [BitTest]
 genOp op c1 c2
     | isNum c1 && isNum c2 = error "You shouldn't be making all-const constraints idiot"
-    | isVar c1 && isNum c2 = genOpWithConst op c1 c2
-    | isNum c1 && isVar c2 = genOpWithConst op c2 c1
-    | isVar c1 && isVar c2 = genOpWithVars op c1 c2
-    | otherwise =
-        let test1     = genComplexConstraint c1
-            (Test t1) = head test1
+    | isVar c1 && isNum c2 = return $ genOpWithConst op c1 c2
+    | isNum c1 && isVar c2 = return $ genOpWithConst op c2 c1
+    | isVar c1 && isVar c2 = return $ genOpWithVars op c1 c2
+    | otherwise = do
+        test1 <- genComplexConstraint c1
+        let (Test t1) = head test1
             tvar1     = Temp "t1"
             temp1     = mkAssign tvar1 t1
-            test2     = genComplexConstraint c2
-            (Test t2) = head test2
+        test2 <- genComplexConstraint c2
+        let (Test t2) = head test2
             tvar2     = Temp "t2"
             temp2     = mkAssign tvar2 t2
             newTest   = mkTest $ mkBinOp tvar1 op tvar2
-        in [newTest, temp1, temp2] ++ tail test1 ++ tail test2
+        return $ [newTest, temp1, temp2] ++ tail test1 ++ tail test2
 
 genOpWithConst :: Op
                -> GlobalConstraint -- ^ The variable
@@ -211,11 +211,15 @@ genOpWithVars op var1 var2
 genVar :: Slice -> ([BitTest], Var)
 genVar slice =
   let andMaskVar   = Temp "andVar"
-      andMaskVal   = Val 0
+      andMaskVal   = makeAndMask slice
       andMask      = mkAssign andMaskVar $ mkBinOp Encoding AndBits andMaskVal
       shiftMaskVar = Temp "ShiftVar"
-      shiftMaskVal = Val 0
+      shiftMaskVal = makeShiftMask slice
       shiftMask    = mkAssign shiftMaskVar $ mkBinOp andMaskVar ShiftBits shiftMaskVal
   in ([andMask, shiftMask], shiftMaskVar)
 
+makeAndMask :: Slice -> Var
+makeAndMask s = Val $ (2 ^ (high s - low s + 1)) `shiftL` low s
 
+makeShiftMask :: Slice -> Var
+makeShiftMask s = Val $ low s
