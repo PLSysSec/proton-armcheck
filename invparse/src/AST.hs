@@ -1,5 +1,6 @@
 {-# LANGUAGE BinaryLiterals #-}
 module AST ( Bits(..)
+           , complexConstraints
            , Slice(..)
            , Instruction(..)
            , instr
@@ -40,6 +41,9 @@ import           Prelude hiding (any, not)
 -- | An ARM instruction encoding is just some constraints over bits
 data Instruction = Instruction { allBits :: [Bits] }
                  deriving (Eq, Ord, Show)
+
+complexConstraints :: Instruction -> [GlobalConstraint]
+complexConstraints inst = map globConstraint $ filter isComplex $ allBits inst
 
 -- | Make a new instruction
 instr :: [Bits] -> Instruction
@@ -116,6 +120,10 @@ data Bits = Bits { bits       :: Slice          -- constrain contiguous bits
                  }
           | Global { globConstraint :: GlobalConstraint } -- constrain global properties
        deriving (Eq, Ord, Show)
+
+isComplex :: Bits -> Bool
+isComplex Global{} = True
+isComplex _        = False
 
 -- | A slice of bits from high to low, INCLUSIVE
 data Slice = Slice { high :: Int

@@ -25,7 +25,8 @@ genConstantMatchInstr :: (Instruction, String) -> IO InstrMatch
 genConstantMatchInstr (inst, name) = do
   bstr <- mapM genInstrMatch $ reverse $ allBits inst
   let bitstring = concat $ catMaybes bstr
-  return $ InstrMatch name bitstring []
+      tests     = map genComplexConstraint $ complexConstraints inst
+  return $ InstrMatch name bitstring (map mkConstraint tests)
 
 genInstrMatch :: Bits -> IO (Maybe BitStr)
 genInstrMatch bits =
@@ -52,6 +53,9 @@ genInstrMatch bits =
 data InstrConstraint = BitConstraint String [BitTest]
                    deriving (Eq, Ord, Show)
 
+
+mkConstraint :: [BitTest] -> InstrConstraint
+mkConstraint = BitConstraint "Debug"
 
 -- | A test can either be a top-level comparison against 1,
 -- or an assingment to a temporary variable
@@ -95,8 +99,10 @@ data Op = AndBits
         | OrBits
         | XorBits
         | ShiftBits
-        | PlusBits
+        | AddBits
         | NotBits
+        | EqBits
+        | NeqBits
         deriving (Eq, Ord, Show)
 
 ---
@@ -106,12 +112,14 @@ data Op = AndBits
 genComplexConstraint :: GlobalConstraint -> [BitTest]
 genComplexConstraint gc =
   case gc of
-    Num{}     -> error "Num is not a complex constraint"
-    Var{}     -> error "Var is not a complex constraint"
-    Eq c1 c2  -> genOp AndBits c1 c2
-    Neq c1 c2 -> genOp OrBits c1 c2
-    And c1 c2 -> genOp AndBits c1 c2
---    Not c     -> error ""
+    Num{}        -> error "Num is not a complex constraint"
+    Var{}        -> error "Var is not a complex constraint"
+    Eq c1 c2     -> genOp EqBits c1 c2
+    Neq c1 c2    -> genOp NeqBits c1 c2
+    And c1 c2    -> genOp AndBits c1 c2
+    Or c1 c2     -> genOp OrBits c1 c2
+    Add c1 c2    -> genOp AddBits c1 c2
+    LogicalNot c -> genUnary NotBits c
 
 genUnary :: Op -> GlobalConstraint -> [BitTest]
 genUnary op c
@@ -133,11 +141,11 @@ genOp op c1 c2
     | isVar c1 && isVar c2 = genOpWithVars op c1 c2
     | otherwise =
         let test1     = genComplexConstraint c1
-            (Test t1) = head test1
+            (Test t1) = trace (show test1) head test1
             tvar1     = Temp "t1"
             temp1     = mkAssign tvar1 t1
             test2     = genComplexConstraint c2
-            (Test t2) = head test2
+            (Test t2) = trace (show test2) head test2
             tvar2     = Temp "t2"
             temp2     = mkAssign tvar2 t2
             newTest   = mkTest $ mkBinOp tvar1 op tvar2
@@ -162,7 +170,7 @@ genOpWithVars op var1 var2
     | isVar var1 && isVar var2 =
         let (v1, name1) = genVar $ slice var1
             (v2, name2) = genVar $ slice var2
-        in v1 ++ v2 ++ [mkTest $ mkBinOp name1 op name2]
+        in [mkTest $ mkBinOp name1 op name2] ++ v1 ++ v2
     | otherwise = error "Malformed inputs to genOpWithVars"
 
 -- | Use the slice numbers to zero out only the bits in the slice.
@@ -170,9 +178,11 @@ genOpWithVars op var1 var2
 genVar :: Slice -> ([BitTest], Var)
 genVar slice =
   let andMaskVar   = Temp "andVar"
-      andMask      = mkAssign andMaskVar $ mkBinOp Encoding AndBits undefined
+      andMaskVal   = Val 0
+      andMask      = mkAssign andMaskVar $ mkBinOp Encoding AndBits andMaskVal
       shiftMaskVar = Temp "ShiftVar"
-      shiftMask    = mkAssign shiftMaskVar $ mkBinOp andMaskVar ShiftBits undefined
+      shiftMaskVal = Val 0
+      shiftMask    = mkAssign shiftMaskVar $ mkBinOp andMaskVar ShiftBits shiftMaskVal
   in ([andMask, shiftMask], shiftMaskVar)
 
 
