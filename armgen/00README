@@ -1,0 +1,4 @@
+# armgen
+
+This directory will eventually contain code to generate an ARM instruction
+checker from a list of instructions and their invariants.
