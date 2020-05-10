@@ -4,6 +4,7 @@ import           AST
 import           Control.Monad (when)
 import           Data.Bits     hiding (Bits)
 import           Data.Char     (intToDigit)
+import           Data.List     (intercalate)
 import           Data.Maybe    (catMaybes)
 import           Debug.Trace
 import           Numeric       (showIntAtBase)
@@ -17,7 +18,12 @@ data InstrMatch = InstrMatch { iname       :: String
                              , bitstring   :: BitStr
                              , constraints :: [InstrConstraint]
                              }
-              deriving (Eq, Ord, Show)
+              deriving (Eq, Ord)
+
+instance Show InstrMatch where
+  show (InstrMatch name str constrs) =
+    let tests = intercalate "\n" $ map show constrs
+    in (unlines [name ++ ":", str]) ++ tests
 
 type BitStr = String
 
@@ -123,7 +129,7 @@ data Op = AndBits
         deriving (Eq, Ord)
 
 instance Show Op where
-    show AndBits   = "+"
+    show AndBits   = "&"
     show OrBits    = "|"
     show XorBits   = "^"
     show ShiftBits = "<<"

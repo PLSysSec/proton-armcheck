@@ -15,9 +15,7 @@ someFunc = do
   strings <- forM a32v8instrs $ \is -> do
     instrMatch <- genConstantMatchInstr is
     let str = bitstring instrMatch
-        cs  = constraints instrMatch
-    putStrLn $ unwords [snd is ++ ":", str]
-    print cs
+    print instrMatch
     unless (length str == 32) $ error $ unwords [ "Bad bitstring"
                                                 , snd is
                                                 , ":"
