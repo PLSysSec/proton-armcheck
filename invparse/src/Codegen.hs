@@ -4,6 +4,7 @@ import           AST
 import           Control.Monad (when)
 import           Data.Bits     hiding (Bits)
 import           Data.Char     (intToDigit)
+import           Data.IORef
 import           Data.List     (intercalate)
 import           Data.Maybe    (catMaybes)
 import           Debug.Trace
@@ -31,7 +32,8 @@ genConstantMatchInstr :: (Instruction, String) -> IO InstrMatch
 genConstantMatchInstr (inst, name) = do
   bstr <- mapM genInstrMatch $ reverse $ allBits inst
   let bitstring = concat $ catMaybes bstr
-  tests <- mapM genComplexConstraint $ complexConstraints inst
+  ref <- newIORef 0
+  tests <- mapM (genComplexConstraint ref) $ complexConstraints inst
   return $ InstrMatch name bitstring (map mkConstraint tests)
 
 genInstrMatch :: Bits -> IO (Maybe BitStr)
@@ -142,42 +144,42 @@ instance Show Op where
 --- Generating bittests
 ---
 
-genComplexConstraint :: GlobalConstraint -> IO [BitTest]
-genComplexConstraint gc =
+genComplexConstraint :: IORef Int -> GlobalConstraint -> IO [BitTest]
+genComplexConstraint ref gc =
   case gc of
     Num{}        -> error "Num is not a complex constraint"
     Var{}        -> error "Var is not a complex constraint"
-    Eq c1 c2     -> genOp EqBits c1 c2
-    Neq c1 c2    -> genOp NeqBits c1 c2
-    And c1 c2    -> genOp AndBits c1 c2
-    Or c1 c2     -> genOp OrBits c1 c2
-    Add c1 c2    -> genOp AddBits c1 c2
-    LogicalNot c -> genUnary NotBits c
+    Eq c1 c2     -> genOp ref EqBits c1 c2
+    Neq c1 c2    -> genOp ref NeqBits c1 c2
+    And c1 c2    -> genOp ref AndBits c1 c2
+    Or c1 c2     -> genOp ref OrBits c1 c2
+    Add c1 c2    -> genOp ref AddBits c1 c2
+    LogicalNot c -> genUnary ref NotBits c
 
-genUnary :: Op -> GlobalConstraint -> IO [BitTest]
-genUnary op c
+genUnary :: IORef Int -> Op -> GlobalConstraint -> IO [BitTest]
+genUnary ref op c
   | isNum c = error "You shouldn't be not-ing a constant idiot"
   | isVar c = error "You shouldn't really be notting a var either? I mean I guess but"
   | otherwise = do
-      test' <- genComplexConstraint c
+      test' <- genComplexConstraint ref c
       let (Test t) = head test'
           tvar     = Temp "t"
           temp     = mkAssign tvar t
           newTest  = mkTest $ mkUnOp op tvar
       return $ [newTest, temp] ++ tail test'
 
-genOp :: Op -> GlobalConstraint -> GlobalConstraint -> IO [BitTest]
-genOp op c1 c2
+genOp :: IORef Int -> Op -> GlobalConstraint -> GlobalConstraint -> IO [BitTest]
+genOp ref op c1 c2
     | isNum c1 && isNum c2 = error "You shouldn't be making all-const constraints idiot"
     | isVar c1 && isNum c2 = return $ genOpWithConst op c1 c2
     | isNum c1 && isVar c2 = return $ genOpWithConst op c2 c1
     | isVar c1 && isVar c2 = return $ genOpWithVars op c1 c2
     | otherwise = do
-        test1 <- genComplexConstraint c1
+        test1 <- genComplexConstraint ref c1
         let (Test t1) = head test1
             tvar1     = Temp "t1"
             temp1     = mkAssign tvar1 t1
-        test2 <- genComplexConstraint c2
+        test2 <- genComplexConstraint ref c2
         let (Test t2) = head test2
             tvar2     = Temp "t2"
             temp2     = mkAssign tvar2 t2
