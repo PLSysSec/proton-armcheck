@@ -1,23 +1,54 @@
 {-# LANGUAGE BinaryLiterals #-}
 module Codegen where
 import           AST
-import           Data.Bits
+import           Data.Bits  hiding (Bits)
 import           Data.Char  (intToDigit)
 import           Data.Maybe (catMaybes)
 import           Numeric    (showIntAtBase)
 
+---
+--- High-level matching on instruction encoding
+---
+
 -- | An instruction encoding and its constraints
-data InstrMatch = InstrMatch BitStr [InstrConstraint]
+data InstrMatch = InstrMatch String BitStr [InstrConstraint]
               deriving (Eq, Ord, Show)
 
 type BitStr = String
 
+genConstantMatchInstr :: (Instruction, String) -> InstrMatch
+genConstantMatchInstr (inst, name) =
+  let bitstring = concat $ catMaybes $ map genInstrMatch $ allBits inst
+  in InstrMatch name bitstring []
+
+genInstrMatch :: Bits -> Maybe BitStr
+genInstrMatch bits =
+  case bits of
+    Global {} -> Nothing
+    Bits bs c ->
+      let len  = high bs - low bs + 1
+      in case c of
+        Constant v ->
+          let str       = showIntAtBase 2 intToDigit v ""
+          in if length str > len
+             then error $ unwords [ "Overly long string:"
+                                  , str
+                                  , ". Expected"
+                                  , show bs
+                                  ]
+             else Just $ replicate (len - length str) '0' ++ str
+        _          -> Just $ replicate len 'x'
+
+
+
+---
+--- Generating invariant tests for a given instruction
+---
 
 -- | Constraints on an instruction
 data InstrConstraint = BitConstraint String [BitTest]
                    deriving (Eq, Ord, Show)
 
--- pull out the left op right part
 
 data BitTest = Test { left  :: Var
                     , op    :: Op
@@ -38,30 +69,35 @@ data Var = Temp String
 data Op = Matc
         | AndBits
         | ShiftBits
-        | OrBits Int
-        | XorBits Int
+        | OrBits
+        | XorBits
         deriving (Eq, Ord, Show)
-
-
 
 genConstraint :: GlobalConstraint -> BitTest
 genConstraint gc =
   case gc of
-    Num{}    -> error "Did not expect num as top level constraint"
-    Var{}    -> error "Did not expect var as top level constraint"
-    Eq c1 c2 -> head $ genEq c1 c2
-    _        -> error ""
+    Num{}     -> error "Did not expect num as top level constraint"
+    Var{}     -> error "Did not expect var as top level constraint"
+    Eq c1 c2  -> head $ genEq True c1 c2
+    Neq c1 c2 -> head $ genEq False c1 c2
+    And c1 c2 -> head $ genAnd c1 c2
+    _         -> error ""
 
-genEq :: GlobalConstraint -> GlobalConstraint -> [BitTest]
-genEq c1 c2 =
+
+genAnd :: GlobalConstraint -> GlobalConstraint -> [BitTest]
+genAnd c1 c2 = error ""
+
+genEq :: Bool -> GlobalConstraint -> GlobalConstraint -> [BitTest]
+genEq eq c1 c2 =
   case c2 of
     Num val    -> [Test Encoding AndBits $ Val $ val `shiftL` low (slice c1)]
     Var slice2 ->
       -- Make temporaries for the variables
       let (var1, name1) = genVar $ slice c1
           (var2, name2) = genVar slice2
+          op            = if eq then AndBits else XorBits
       -- Actually do the equality test
-      in var1 ++ var2 ++ [Test name1 AndBits name2]
+      in var1 ++ var2 ++ [Test name1 op name2]
     _          -> error ""
 
 -- | Use the slice numbers to zero out only the bits in the slice.
@@ -74,33 +110,7 @@ genVar slice =
       shiftMask    = Assign shiftMaskVar andMaskVar ShiftBits undefined
   in ([andMask, shiftMask], shiftMaskVar)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
--- -- | Make sure bit strings are well formed
--- mkStr :: String -> BitStr
--- mkStr str = str
-
--- data Output = Output { bitstring :: BitStr
---                      , operator  :: Op
---                      }
---             deriving (Eq, Ord, Show)
-
-
--- genConstantMatchInstr :: Instruction -> Output
--- genConstantMatchInstr inst =
---   let bitstring = concat $ catMaybes $ map genConstantMatchBits $ allBits inst
---   in Output bitstring Matc
+-- may not need these guys
 
 make32BitBinaryString :: Slice -> Int -> String
 make32BitBinaryString s val =
@@ -120,31 +130,4 @@ makeBinaryString s val =
                           , show s
                           ]
      else replicate (len - length str) '0' ++ str
-
-
--- genConstantMatchBits :: Bits -> Maybe BitStr
--- genConstantMatchBits bits =
---   case bits of
---     Global {} -> Nothing
---     Bits bs c ->
---       let len  = high bs - low bs + 1
---       in case c of
---         Constant v ->
---           let str       = showIntAtBase 2 intToDigit v ""
---           in if length str > len
---              then error $ unwords [ "Overly long string:"
---                                   , str
---                                   , ". Expected"
---                                   , show bs
---                                   ]
---              else Just $ replicate (len - length str) '0' ++ str
---         _          -> Just $ replicate len 'x'
-
-
--- ---
--- --- Generating more complicated constraints
--- ---
-
--- -- genVar :: Slice -> Bitstring
--- -- genVar slice = error ""
 
