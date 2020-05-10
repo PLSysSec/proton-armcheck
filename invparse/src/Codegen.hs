@@ -23,9 +23,8 @@ type BitStr = String
 
 genConstantMatchInstr :: (Instruction, String) -> IO InstrMatch
 genConstantMatchInstr (inst, name) = do
-  bstr <- mapM genInstrMatch $ allBits inst
-  print bstr
-  let bitstring = reverse $ concat $ catMaybes bstr
+  bstr <- mapM genInstrMatch $ reverse $ allBits inst
+  let bitstring = concat $ catMaybes bstr
   return $ InstrMatch name bitstring []
 
 genInstrMatch :: Bits -> IO (Maybe BitStr)
@@ -42,9 +41,7 @@ genInstrMatch bits =
                                                     , ". Expected"
                                                     , show bs
                                                     ]
-          let toret = Just $ replicate (len - length str) '0' ++ str
-          print toret
-          return toret
+          return $ Just $ replicate (len - length str) '0' ++ str
         _          -> return $ Just $ replicate len 'x'
 
 ---
