@@ -51,8 +51,12 @@ genInstrMatch bits =
 
 -- | Constraints on an instruction
 data InstrConstraint = BitConstraint String [BitTest]
-                   deriving (Eq, Ord, Show)
+                   deriving (Eq, Ord)
 
+
+instance Show InstrConstraint where
+    show (BitConstraint str tests) =
+      unlines $ ["Tests for" ++ str ++ ":"] ++ map show (reverse tests)
 
 mkConstraint :: [BitTest] -> InstrConstraint
 mkConstraint = BitConstraint "Debug"
@@ -63,7 +67,11 @@ data BitTest = Test { test :: TestContents }
              | Assign { lhs :: Var
                       , rhs :: TestContents
                       }
-             deriving (Eq, Ord, Show)
+             deriving (Eq, Ord)
+
+instance Show BitTest where
+    show (Test t)     = unwords ["TEST:", show t]
+    show (Assign l r) = unwords [show l, "=", show r]
 
 mkAssign :: Var -> TestContents -> BitTest
 mkAssign = Assign
@@ -80,7 +88,11 @@ data TestContents = BinOp { left  :: Var
                   | UnOp { op   :: Op
                          , oper :: Var
                          }
-                  deriving (Eq, Ord, Show)
+                  deriving (Eq, Ord)
+
+instance Show TestContents where
+    show (BinOp l op r) = unwords [show l, show op, show r]
+    show (UnOp op oper) = show op ++ show oper
 
 mkBinOp :: Var -> Op -> Var -> TestContents
 mkBinOp = BinOp
@@ -92,7 +104,12 @@ mkUnOp = UnOp
 data Var = Temp String
          | Val Int
          | Encoding
-         deriving (Eq, Ord, Show)
+         deriving (Eq, Ord)
+
+instance Show Var where
+    show (Temp s) = s
+    show (Val i)  = show i
+    show Encoding = "enc"
 
 -- | The operation: And, or, etc.
 data Op = AndBits
@@ -103,7 +120,17 @@ data Op = AndBits
         | NotBits
         | EqBits
         | NeqBits
-        deriving (Eq, Ord, Show)
+        deriving (Eq, Ord)
+
+instance Show Op where
+    show AndBits   = "+"
+    show OrBits    = "|"
+    show XorBits   = "^"
+    show ShiftBits = "<<"
+    show AddBits   = "+"
+    show NotBits   = "~"
+    show EqBits    = "=="
+    show NeqBits   = "!="
 
 ---
 --- Generating bittests
@@ -141,11 +168,11 @@ genOp op c1 c2
     | isVar c1 && isVar c2 = genOpWithVars op c1 c2
     | otherwise =
         let test1     = genComplexConstraint c1
-            (Test t1) = trace (show test1) head test1
+            (Test t1) = head test1
             tvar1     = Temp "t1"
             temp1     = mkAssign tvar1 t1
             test2     = genComplexConstraint c2
-            (Test t2) = trace (show test2) head test2
+            (Test t2) = head test2
             tvar2     = Temp "t2"
             temp2     = mkAssign tvar2 t2
             newTest   = mkTest $ mkBinOp tvar1 op tvar2
