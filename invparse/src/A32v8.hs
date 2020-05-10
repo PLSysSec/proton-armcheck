@@ -4,43 +4,43 @@ import           AST
 import           Prelude hiding (any, not)
 
 a32v8instrs :: [(Instruction, String)]
-a32v8instrs = map (\i -> (instr $ fst i, snd i)) [ (ldrimm, "ldrdimm")
-                                                 , (ldrlit, "ldrlit")
-                                                 , (ldrreg, "ldrreg")
-                                                 , (ldrbimm, "ldrbimm")
-                                                 , (ldrblit, "ldrblit")
-                                                 , (ldrbreg, "ldrbreg")
-                                                 , (ldrdimm, "ldrdimm")
-                                                 , (ldrdlit, "ldrdlit")
-                                                 , (ldrdreg, "ldrdreg")
-                                                 , (ldrhimm, "ldrhimm")
-                                                 , (ldrhlit, "ldrhlit")
-                                                 , (ldrhreg, "ldrhreg")
-                                                 , (ldrsbimm, "ldrsbimm")
-                                                 , (ldrsblit, "ldrsblit")
-                                                 , (ldrsbreg, "ldrsbreg")
-                                                 , (ldrshimm, "ldrshimm")
-                                                 , (ldrshlit, "ldrshlit")
-                                                 , (ldrshreg, "ldrshreg")
-                                                 -- stores
-                                                 , (strimm, "strimm")
-                                                 , (strreg, "strreg")
-                                                 , (strhimm, "strhimm")
-                                                 , (strhreg, "strhreg")
-                                                 , (strbimm, "strbimm")
-                                                 , (strbreg, "strbreg")
-                                                 , (strdimm, "strdimm")
-                                                 , (strdreg, "strdreg")
-                                                 -- atomic loads
-                                                 , (ldrex, "ldrex")
-                                                 , (ldrexb, "ldrexb")
-                                                 , (ldrexd, "ldrexd")
-                                                 , (ldrexh, "ldrexh")
-                                                 -- atomic stores
-                                                 , (strex, "strex")
-                                                 , (strexb, "strexb")
-                                                 , (strexd, "strexd")
-                                                 , (strexh, "strexh")
+a32v8instrs = map (\i -> (instr $ fst i, snd i)) [ (ldrimm, "ldrimm")
+                                                 -- , (ldrlit, "ldrlit")
+                                                 -- , (ldrreg, "ldrreg")
+                                                 -- , (ldrbimm, "ldrbimm")
+                                                 -- , (ldrblit, "ldrblit")
+                                                 -- , (ldrbreg, "ldrbreg")
+                                                 -- , (ldrdimm, "ldrdimm")
+                                                 -- , (ldrdlit, "ldrdlit")
+                                                 -- , (ldrdreg, "ldrdreg")
+                                                 -- , (ldrhimm, "ldrhimm")
+                                                 -- , (ldrhlit, "ldrhlit")
+                                                 -- , (ldrhreg, "ldrhreg")
+                                                 -- , (ldrsbimm, "ldrsbimm")
+                                                 -- , (ldrsblit, "ldrsblit")
+                                                 -- , (ldrsbreg, "ldrsbreg")
+                                                 -- , (ldrshimm, "ldrshimm")
+                                                 -- , (ldrshlit, "ldrshlit")
+                                                 -- , (ldrshreg, "ldrshreg")
+                                                 -- -- stores
+                                                 -- , (strimm, "strimm")
+                                                 -- , (strreg, "strreg")
+                                                 -- , (strhimm, "strhimm")
+                                                 -- , (strhreg, "strhreg")
+                                                 -- , (strbimm, "strbimm")
+                                                 -- , (strbreg, "strbreg")
+                                                 -- , (strdimm, "strdimm")
+                                                 -- , (strdreg, "strdreg")
+                                                 -- -- atomic loads
+                                                 -- , (ldrex, "ldrex")
+                                                 -- , (ldrexb, "ldrexb")
+                                                 -- , (ldrexd, "ldrexd")
+                                                 -- , (ldrexh, "ldrexh")
+                                                 -- -- atomic stores
+                                                 -- , (strex, "strex")
+                                                 -- , (strexb, "strexb")
+                                                 -- , (strexd, "strexd")
+                                                 -- , (strexh, "strexh")
                                                  ]
 
 
@@ -73,8 +73,8 @@ ldrimm = [ not 31 28 0b1111
          , reg 15 12
          , any 11 0 -- imm12.
          -- restrictions
-         , neqc' 19 16 0b1111
-         , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+         -- , neqc' 19 16 0b1111
+         -- , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
          ]
 
 ldrlit = [ not 31 28 0b1111

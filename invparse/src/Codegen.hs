@@ -1,45 +1,51 @@
 {-# LANGUAGE BinaryLiterals #-}
 module Codegen where
 import           AST
-import           Data.Bits  hiding (Bits)
-import           Data.Char  (intToDigit)
-import           Data.Maybe (catMaybes)
-import           Numeric    (showIntAtBase)
+import           Control.Monad (when)
+import           Data.Bits     hiding (Bits)
+import           Data.Char     (intToDigit)
+import           Data.Maybe    (catMaybes)
+import           Debug.Trace
+import           Numeric       (showIntAtBase)
 
 ---
 --- High-level matching on instruction encoding
 ---
 
 -- | An instruction encoding and its constraints
-data InstrMatch = InstrMatch String BitStr [InstrConstraint]
+data InstrMatch = InstrMatch { iname       :: String
+                             , bitstring   :: BitStr
+                             , constraints :: [InstrConstraint]
+                             }
               deriving (Eq, Ord, Show)
 
 type BitStr = String
 
-genConstantMatchInstr :: (Instruction, String) -> InstrMatch
-genConstantMatchInstr (inst, name) =
-  let bitstring = concat $ catMaybes $ map genInstrMatch $ allBits inst
-  in InstrMatch name bitstring []
+genConstantMatchInstr :: (Instruction, String) -> IO InstrMatch
+genConstantMatchInstr (inst, name) = do
+  bstr <- mapM genInstrMatch $ allBits inst
+  print bstr
+  let bitstring = reverse $ concat $ catMaybes bstr
+  return $ InstrMatch name bitstring []
 
-genInstrMatch :: Bits -> Maybe BitStr
+genInstrMatch :: Bits -> IO (Maybe BitStr)
 genInstrMatch bits =
   case bits of
-    Global {} -> Nothing
-    Bits bs c ->
+    Global {} -> return Nothing
+    Bits bs c -> do
       let len  = high bs - low bs + 1
-      in case c of
-        Constant v ->
+      case c of
+        Constant v -> do
           let str       = showIntAtBase 2 intToDigit v ""
-          in if length str > len
-             then error $ unwords [ "Overly long string:"
-                                  , str
-                                  , ". Expected"
-                                  , show bs
-                                  ]
-             else Just $ replicate (len - length str) '0' ++ str
-        _          -> Just $ replicate len 'x'
-
-
+          when (length str > len) $ error $ unwords [ "Overly long string:"
+                                                    , str
+                                                    , ". Expected"
+                                                    , show bs
+                                                    ]
+          let toret = Just $ replicate (len - length str) '0' ++ str
+          print toret
+          return toret
+        _          -> return $ Just $ replicate len 'x'
 
 ---
 --- Generating invariant tests for a given instruction
