@@ -47,7 +47,7 @@ def read_instrs(infile):
     ret = []
     TreeNode.names.clear()
     for (n, i) in ni:
-        TreeNode.names[i] = n[:-1]
+        TreeNode.names[i] = n
         ret.append(i)
     return ret
 
@@ -62,6 +62,7 @@ def num_opts(instrs, posn):
 def get_posns(instrs):
     # walrus operator!!!
     #return [ (p, n) for p in range(0, len(instrs[0])) if (n := num_opts(instrs, p)) > 1 ]
+    nx1 = []
     nx2 = []
     x2 = []
     x3 = []
@@ -72,17 +73,16 @@ def get_posns(instrs):
             continue
         if 'x' in opts:
             if len(opts) == 2:
-                #x2.append((p, opts))
                 x2.append(p)
             else:
-                #x3.append((p, opts))
                 x3.append(p)
         elif len(opts) == 2:
-            #nx2.append((p, opts))
             nx2.append(p)
+        elif len(opts) == 1:
+            nx1.append(p)
         else:
-            raise ValueError("unexpected: posn was none of nx2, x2, x3")
-    return nx2 + x3 + x2
+            raise ValueError("unexpected: posn was none of nx2, x2, x3: %s" % str(opts))
+    return nx1 + nx2 + x3 + x2
 
 # get the values that go on the left or right side
 def get_lr(instrs, posn):
@@ -97,6 +97,69 @@ def get_lr(instrs, posn):
             # '1' or 'x'
             l1.append(instr)
     return (l0, l1)
+
+def cleanup_dead_ends(root):
+    work = deque()
+    work.append(root)
+    while work:
+        node = work.popleft()
+        if node is None:
+            continue
+
+        if not node.is_leaf():
+            work.append(node.left)
+            work.append(node.right)
+
+        if node.up is None:
+            continue
+
+        (sibling, node_is_Left) = (node.up.right, True) if node.up.left is node else (node.up.left, False)
+        if sibling is None or sibling.is_leaf():
+            continue
+        if node.posn != sibling.posn:
+            continue
+        if node.left is not None and node.right is not None:
+            continue
+        if sibling.left is not None and sibling.right is not None:
+            continue
+
+        nn = None
+        if node.left is None and sibling.left is None:
+            nn = TreeNode()
+            (nn.left, nn.right) = (node.right, sibling.right) if node_is_Left else (sibling.right, node.right)
+            (node.up.left, node.up.right) = (None, nn)
+        if node.right is None and sibling.right is None:
+            nn = TreeNode()
+            (nn.left, nn.right) = (node.left, sibling.left) if node_is_Left else (sibling.left, node.left)
+            (node.up.left, node.up.right) = (nn, None)
+        if nn is None:
+            continue
+        nn.posn = node.up.posn
+        node.up.posn = node.posn
+        nn.up = node.up
+        nn.left.up = nn.right.up = nn
+        work.append(node.up)
+
+def cleanup_1111(root):
+    work = deque()
+    work.append(root)
+    while work:
+        node = work.popleft()
+        if node is None:
+            continue
+
+        if not node.is_leaf():
+            work.append(node.left)
+            work.append(node.right)
+            continue
+
+        if node.up is None:
+            continue
+        (sibling, node_is_Left) = (node.up.right, True) if node.up.left is node else (node.up.left, False)
+        if sibling is None or not sibling.is_leaf() or sibling.values is None or len(sibling.values) != 1:
+            continue
+        if sibling.values[0] in node.values:
+            node.values.remove(sibling.values[0])
 
 def make_decision_tree(instrs):
     posns = get_posns(instrs)
@@ -115,10 +178,6 @@ def make_decision_tree(instrs):
         wnext = deque()
         while work:
             node = work.popleft()
-
-            # no need to do anything if there's only one instruction here
-            if len(node.values) < 2:
-                continue
 
             # check if current position applies to this node
             (v0, v1) = get_lr(node.values, p)
@@ -145,4 +204,6 @@ def make_decision_tree(instrs):
             node.posn = p
             node.values = []
 
+    cleanup_dead_ends(root)
+    cleanup_1111(root)
     return root
