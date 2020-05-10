@@ -92,8 +92,27 @@ genOp op c1 c2
     | isNum c1 && isNum c2 = error "You shouldn't be making all-const constraints idiot"
     | isVar c1 && isNum c2 = genOpWithConst op c1 c2
     | isNum c1 && isVar c2 = genOpWithConst op c2 c1
-    | otherwise = error "not done"
+    | isVar c1 && isVar c2 = genOpWithVars op c1 c2
+    | otherwise =
+        let test1              = genComplexConstraint c1
+            (Test v1 op v2)    = head test1
+            test2              = genComplexConstraint c2
+            (Test v1' op' v2') = head test2
+            temp1              = Assign (Temp "t1") v1 op v2
+            temp2              = Assign (Temp "t2") v1' op' v2'
+        in (Test (Temp "t1") op (Temp "t2")):([temp1] ++ [temp2] ++ tail test1 ++ tail test2)
 
+
+genComplexConstraint :: GlobalConstraint -> [BitTest]
+genComplexConstraint gc =
+  case gc of
+    Num{}     -> error "Num is not a complex constraint"
+    Var{}     -> error "Var is not a complex constraint"
+    Eq c1 c2  -> genOp AndBits c1 c2
+    Neq c1 c2 -> genOp OrBits c1 c2
+    And c1 c2 -> genOp AndBits c1 c2
+
+-- |
 genOpWithConst :: Op
                -> GlobalConstraint -- ^ The variable
                -> GlobalConstraint -- ^ The number
