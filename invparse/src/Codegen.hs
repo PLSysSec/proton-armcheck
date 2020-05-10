@@ -53,55 +53,55 @@ data InstrConstraint = BitConstraint String [BitTest]
                    deriving (Eq, Ord, Show)
 
 
-data BitTest = Test { left  :: Var
-                    , op    :: Op
-                    , right :: Var
-                    }
-             | Assign { lhs   :: Var
-                      , left  :: Var
-                      , op    :: Op
-                      , right:: Var
+-- | A test can either be a top-level comparison against 1,
+-- or an assingment to a temporary variable
+data BitTest = Test { test :: TestContents }
+             | Assign { lhs :: Var
+                      , rhs :: TestContents
                       }
-             | Wrapped Var
              deriving (Eq, Ord, Show)
 
+mkAssign :: Var -> TestContents -> BitTest
+mkAssign = Assign
+
+mkTest :: TestContents -> BitTest
+mkTest = Test
+
+-- | The contents of a test can either be a binary operation (e.g., and)
+-- or a unary operation (e.g., not)
+data TestContents = BinOp { left  :: Var
+                          , op    :: Op
+                          , right :: Var
+                          }
+                  | UnOp { op   :: Op
+                         , oper :: Var
+                         }
+                  deriving (Eq, Ord, Show)
+
+mkBinOp :: Var -> Op -> Var -> TestContents
+mkBinOp = BinOp
+
+mkUnOp :: Op -> Var -> TestContents
+mkUnOp = UnOp
+
+-- | Vars are either temporaries, constants, or the encoding itself
 data Var = Temp String
          | Val Int
          | Encoding
          deriving (Eq, Ord, Show)
 
+-- | The operation: And, or, etc.
 data Op = AndBits
         | OrBits
         | XorBits
         | ShiftBits
         | PlusBits
+        | NotBits
         deriving (Eq, Ord, Show)
 
-genConstraint :: GlobalConstraint -> BitTest
-genConstraint gc =
-  case gc of
-    Num n     -> Wrapped $ Val n
-    Var slice -> error $ show $ genVar slice
-    -- Eq c1 c2  -> head $ genEq True c1 c2
-    -- Neq c1 c2 -> head $ genEq False c1 c2
-    And c1 c2 -> head $ genBinOp AndBits c1 c2
-    _         -> error ""
-
-genOp :: Op -> GlobalConstraint -> GlobalConstraint -> [BitTest]
-genOp op c1 c2
-    | isNum c1 && isNum c2 = error "You shouldn't be making all-const constraints idiot"
-    | isVar c1 && isNum c2 = genOpWithConst op c1 c2
-    | isNum c1 && isVar c2 = genOpWithConst op c2 c1
-    | isVar c1 && isVar c2 = genOpWithVars op c1 c2
-    | otherwise =
-        let test1              = genComplexConstraint c1
-            (Test v1 op v2)    = head test1
-            test2              = genComplexConstraint c2
-            (Test v1' op' v2') = head test2
-            temp1              = Assign (Temp "t1") v1 op v2
-            temp2              = Assign (Temp "t2") v1' op' v2'
-        in (Test (Temp "t1") op (Temp "t2")):([temp1] ++ [temp2] ++ tail test1 ++ tail test2)
-
+---
+--- Generating bittests
+---
 
 genComplexConstraint :: GlobalConstraint -> [BitTest]
 genComplexConstraint gc =
@@ -111,8 +111,32 @@ genComplexConstraint gc =
     Eq c1 c2  -> genOp AndBits c1 c2
     Neq c1 c2 -> genOp OrBits c1 c2
     And c1 c2 -> genOp AndBits c1 c2
+--    Not c     -> error ""
 
--- |
+genUnary :: Op -> GlobalConstraint -> [BitTest]
+genUnary op c = error ""
+  -- | isNum c = error "You shouldn't be not-ing a constant idiot"
+  -- | isVar c = error "You shouldn't really be notting a var either? I mean I guess but"
+  -- | otherwise =
+  --     let test = genComplexConstraint c
+  --         (Test )
+
+
+genOp :: Op -> GlobalConstraint -> GlobalConstraint -> [BitTest]
+genOp op c1 c2
+    | isNum c1 && isNum c2 = error "You shouldn't be making all-const constraints idiot"
+    | isVar c1 && isNum c2 = genOpWithConst op c1 c2
+    | isNum c1 && isVar c2 = genOpWithConst op c2 c1
+    | isVar c1 && isVar c2 = genOpWithVars op c1 c2
+    | otherwise = error ""
+        -- let test1              = genComplexConstraint c1
+        --     (Test v1 op v2)    = head test1
+        --     test2              = genComplexConstraint c2
+        --     (Test v1' op' v2') = head test2
+        --     temp1              = Assign (Temp "t1") v1 op v2
+        --     temp2              = Assign (Temp "t2") v1' op' v2'
+        -- in (Test (Temp "t1") op (Temp "t2")):([temp1] ++ [temp2] ++ tail test1 ++ tail test2)
+
 genOpWithConst :: Op
                -> GlobalConstraint -- ^ The variable
                -> GlobalConstraint -- ^ The number
@@ -120,7 +144,8 @@ genOpWithConst :: Op
 genOpWithConst op var num
   | isVar var && isNum num =
       -- Shift the constant to be even with the value, then do the test
-      [Test Encoding op $ Val $ (val num) `shiftL` low (slice var)]
+      let shiftedVal = Val $ val num `shiftL` low (slice var)
+      in [mkTest $ mkBinOp Encoding op shiftedVal]
   | otherwise = error "Malformed inputs to genOpWithConst"
 
 genOpWithVars :: Op
@@ -131,26 +156,17 @@ genOpWithVars op var1 var2
     | isVar var1 && isVar var2 =
         let (v1, name1) = genVar $ slice var1
             (v2, name2) = genVar $ slice var2
-        in v1 ++ v2 ++ [Test name1 op name2]
+        in v1 ++ v2 ++ [mkTest $ mkBinOp name1 op name2]
     | otherwise = error "Malformed inputs to genOpWithVars"
-
-genBinOp :: Op -> GlobalConstraint -> GlobalConstraint -> [BitTest]
-genBinOp = undefined
-
-genNot :: GlobalConstraint -> [BitTest]
-genNot = undefined
-
-
---- Variables
 
 -- | Use the slice numbers to zero out only the bits in the slice.
 -- | Return an and of the sliced out shit, shifted all the way left.
 genVar :: Slice -> ([BitTest], Var)
 genVar slice =
   let andMaskVar   = Temp "andVar"
-      andMask      = Assign andMaskVar Encoding AndBits undefined
+      andMask      = mkAssign andMaskVar $ mkBinOp Encoding AndBits undefined
       shiftMaskVar = Temp "ShiftVar"
-      shiftMask    = Assign shiftMaskVar andMaskVar ShiftBits undefined
+      shiftMask    = mkAssign shiftMaskVar $ mkBinOp andMaskVar ShiftBits undefined
   in ([andMask, shiftMask], shiftMaskVar)
 
 
