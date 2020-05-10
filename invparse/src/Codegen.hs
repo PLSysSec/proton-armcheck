@@ -175,7 +175,7 @@ genOp ref op c1 c2
     | isNum c1 && isNum c2 = error "You shouldn't be making all-const constraints idiot"
     | isVar c1 && isNum c2 = return $ genOpWithConst op c1 c2
     | isNum c1 && isVar c2 = return $ genOpWithConst op c2 c1
-    | isVar c1 && isVar c2 = return $ genOpWithVars op c1 c2
+    | isVar c1 && isVar c2 = genOpWithVars ref op c1 c2
     | otherwise = do
         test1 <- genComplexConstraint ref c1
         varTemp1 <- readIORef ref
@@ -203,28 +203,35 @@ genOpWithConst op var num
       in [mkTest $ mkBinOp Encoding op shiftedVal]
   | otherwise = error "Malformed inputs to genOpWithConst"
 
-genOpWithVars :: Op
+genOpWithVars :: IORef Int
+              -> Op
               -> GlobalConstraint -- ^ Variable
               -> GlobalConstraint -- ^ Other variable
-              -> [BitTest]
-genOpWithVars op var1 var2
-    | isVar var1 && isVar var2 =
-        let (v1, name1) = genVar $ slice var1
-            (v2, name2) = genVar $ slice var2
-        in [mkTest $ mkBinOp name1 op name2] ++ v1 ++ v2
+              -> IO [BitTest]
+genOpWithVars ref op var1 var2
+    | isVar var1 && isVar var2 = do
+        (v1, name1) <- genVar ref $ slice var1
+        (v2, name2) <- genVar ref $ slice var2
+        return $ [mkTest $ mkBinOp name1 op name2] ++ v1 ++ v2
     | otherwise = error "Malformed inputs to genOpWithVars"
 
 -- | Use the slice numbers to zero out only the bits in the slice.
 -- | Return an and of the sliced out shit, shifted all the way left.
-genVar :: Slice -> ([BitTest], Var)
-genVar slice =
-  let andMaskVar   = Temp "andVar"
+genVar :: IORef Int -> Slice -> IO ([BitTest], Var)
+genVar ref slice = do
+  andTemp <- readIORef ref
+  modifyIORef' ref (+ 1)
+  let andMaskVar   = Temp $ "t" ++ show andTemp
       andMaskVal   = makeAndMask slice
       andMask      = mkAssign andMaskVar $ mkBinOp Encoding AndBits andMaskVal
-      shiftMaskVar = Temp "ShiftVar"
+
+  shiftTemp <- readIORef ref
+  modifyIORef' ref (+ 1)
+  let shiftMaskVar = Temp $ "t" ++ show shiftTemp
       shiftMaskVal = makeShiftMask slice
       shiftMask    = mkAssign shiftMaskVar $ mkBinOp andMaskVar ShiftBits shiftMaskVal
-  in ([andMask, shiftMask], shiftMaskVar)
+
+  return ([andMask, shiftMask], shiftMaskVar)
 
 makeAndMask :: Slice -> Var
 makeAndMask s = Val $ (2 ^ (high s - low s + 1)) `shiftL` low s
