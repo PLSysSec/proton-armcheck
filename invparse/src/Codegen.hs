@@ -114,13 +114,16 @@ genComplexConstraint gc =
 --    Not c     -> error ""
 
 genUnary :: Op -> GlobalConstraint -> [BitTest]
-genUnary op c = error ""
-  -- | isNum c = error "You shouldn't be not-ing a constant idiot"
-  -- | isVar c = error "You shouldn't really be notting a var either? I mean I guess but"
-  -- | otherwise =
-  --     let test = genComplexConstraint c
-  --         (Test )
-
+genUnary op c
+  | isNum c = error "You shouldn't be not-ing a constant idiot"
+  | isVar c = error "You shouldn't really be notting a var either? I mean I guess but"
+  | otherwise =
+      let test'    = genComplexConstraint c
+          (Test t) = head test'
+          tvar     = Temp "t"
+          temp     = mkAssign tvar t
+          newTest  = mkTest $ mkUnOp op tvar
+      in [newTest, temp] ++ tail test'
 
 genOp :: Op -> GlobalConstraint -> GlobalConstraint -> [BitTest]
 genOp op c1 c2
@@ -128,14 +131,17 @@ genOp op c1 c2
     | isVar c1 && isNum c2 = genOpWithConst op c1 c2
     | isNum c1 && isVar c2 = genOpWithConst op c2 c1
     | isVar c1 && isVar c2 = genOpWithVars op c1 c2
-    | otherwise = error ""
-        -- let test1              = genComplexConstraint c1
-        --     (Test v1 op v2)    = head test1
-        --     test2              = genComplexConstraint c2
-        --     (Test v1' op' v2') = head test2
-        --     temp1              = Assign (Temp "t1") v1 op v2
-        --     temp2              = Assign (Temp "t2") v1' op' v2'
-        -- in (Test (Temp "t1") op (Temp "t2")):([temp1] ++ [temp2] ++ tail test1 ++ tail test2)
+    | otherwise =
+        let test1     = genComplexConstraint c1
+            (Test t1) = head test1
+            tvar1     = Temp "t1"
+            temp1     = mkAssign tvar1 t1
+            test2     = genComplexConstraint c2
+            (Test t2) = head test2
+            tvar2     = Temp "t2"
+            temp2     = mkAssign tvar2 t2
+            newTest   = mkTest $ mkBinOp tvar1 op tvar2
+        in [newTest, temp1, temp2] ++ tail test1 ++ tail test2
 
 genOpWithConst :: Op
                -> GlobalConstraint -- ^ The variable
