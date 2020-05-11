@@ -2,12 +2,15 @@
 #
 # generate an optimized? decision tree given a list of instructions
 
+from cffi import FFI
 from collections import deque
+from random import choice, getrandbits
 
 # decision tree node / leaf object
 class TreeNode(object):
     names = {}
     values = []
+    instrs = []
     posn = None
     left = None
     right = None
@@ -42,8 +45,8 @@ class TreeNode(object):
 
     def to_code(self, indent=0):
         (ostr, posns) = self._to_code(indent)
-        pstr = "int DEAD_END = -1;\n"
         indent_str = " " * indent
+        pstr = indent_str + "int DEAD_END = -1;\n"
         for p in posns:
             px = 31 - p
             pstr += indent_str + "int instr_bit_%d = (instr & (1 << %d)) != 0;\n" % (p, px)
@@ -53,7 +56,9 @@ class TreeNode(object):
         indent_str = " " * indent
         posns = set()
         if self.is_leaf():
-            return (indent_str + "printf(\"%s\\n\");\n" % str(self.values), posns)
+            #return (indent_str + "printf(\"%s\\n\");\n" % str(self.values), posns)
+            assert len(self.values) == 1
+            return (indent_str + "return %d;\n" % self.instrs.index(self.values[0]), posns)
 
         ostr = ""
         posns.add(self.posn)
@@ -85,6 +90,7 @@ def read_instrs(infile):
     for (n, i) in ni:
         TreeNode.names[i] = n
         ret.append(i)
+    TreeNode.instrs = ret
     return ret
 
 # how many different values are there across all instructions at a given position?
@@ -243,3 +249,51 @@ def make_decision_tree(instrs):
     cleanup_dead_ends(root)
     cleanup_1111(root)
     return root
+
+def to_bits(instr):
+    ret = bin(instr)[2:]
+    ret = ('0' * (32 - len(ret))) + ret
+    return ret
+
+def match_instr(template, instr):
+    for (t, i) in zip(template, to_bits(instr)):
+        if t != 'x' and t != i:
+            return False
+    return True
+
+def fix_instr(template, instr):
+    maxint = (1 << 32) - 1
+    for (idx, b) in enumerate(template):
+        bidx = 31 - idx
+        if b == 'x':
+            continue
+        if b == '0':
+            mask = maxint ^ (1 << bidx)
+            instr = instr & mask
+        else:
+            assert b == '1'
+            mask = (1 << bidx)
+            instr = instr | mask
+    assert match_instr(template, instr)
+    return instr
+
+def test(instr_file):
+    # read in file and generate decision tree
+    instrs = read_instrs(instr_file)
+    root = make_decision_tree(instrs)
+
+    # build the resulting code
+    cstr = "int check_instr(uint32_t instr) {\n" + root.to_code(indent=2) + "  return 0;\n}\n"
+    ffibuilder = FFI()
+    ffibuilder.cdef("int check_instr(uint32_t instr);")
+    ffibuilder.set_source("_ckinstr", cstr)
+    ffibuilder.compile(verbose=True)
+    from _ckinstr import ffi, lib
+
+    # first, test random values that match known instructions
+    for _ in range(0, 256):
+        target_instr = choice(instrs)
+        instr = fix_instr(target_instr, getrandbits(32))
+        ret = lib.check_instr(instr)
+        if ret != TreeNode.instrs.index(target_instr):
+            print(TreeNode.names[target_instr], to_bits(instr))
