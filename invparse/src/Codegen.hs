@@ -2,6 +2,7 @@
 module Codegen where
 import           AST
 import           Control.Monad (when)
+import           Control.Monad (unless)
 import           Data.Bits     hiding (Bits)
 import           Data.Char     (intToDigit)
 import           Data.IORef
@@ -71,51 +72,27 @@ mkConstraint = BitConstraint "Debug"
 
 -- | A test can either be a top-level comparison against 1,
 -- or an assingment to a temporary variable
-data BitTest = Test { test :: TestContents }
-             | Assign { lhs :: Var
-                      , rhs :: TestContents
-                      }
+data BitTest = BinOp { left  :: BitTest
+                     , op    :: Op
+                     , right :: BitTest
+                     }
+             | UnaryOp { op   :: Op
+                       , node :: BitTest
+                       }
+             | NoOp { var :: Var }
              deriving (Eq, Ord)
 
 instance Show BitTest where
-    show (Test t)     = unwords ["TEST:", show t]
-    show (Assign l r) = unwords [show l, "=", show r]
-
-mkAssign :: Var -> TestContents -> BitTest
-mkAssign = Assign
-
-mkTest :: TestContents -> BitTest
-mkTest = Test
-
--- | The contents of a test can either be a binary operation (e.g., and)
--- or a unary operation (e.g., not)
-data TestContents = BinOp { left  :: Var
-                          , op    :: Op
-                          , right :: Var
-                          }
-                  | UnOp { op   :: Op
-                         , oper :: Var
-                         }
-                  deriving (Eq, Ord)
-
-instance Show TestContents where
-    show (BinOp l op r) = unwords [show l, show op, show r]
-    show (UnOp op oper) = show op ++ show oper
-
-mkBinOp :: Var -> Op -> Var -> TestContents
-mkBinOp = BinOp
-
-mkUnOp :: Op -> Var -> TestContents
-mkUnOp = UnOp
+    show (BinOp l o r) = unwords ["(", show l, ")", show o, "(", show r, ")"]
+    show (UnaryOp o n) = unwords [show o, show n]
+    show (NoOp v)      = show v
 
 -- | Vars are either temporaries, constants, or the encoding itself
-data Var = Temp String
-         | Val Int
+data Var = Val Int
          | Encoding
          deriving (Eq, Ord)
 
 instance Show Var where
-    show (Temp s) = s
     show (Val i)  = show i
     show Encoding = "enc"
 
@@ -144,101 +121,37 @@ instance Show Op where
 --- Generating bittests
 ---
 
-genComplexConstraint :: IORef Int -> GlobalConstraint -> IO [BitTest]
-genComplexConstraint ref gc =
+noShift = -1
+shiftOf n = n
+
+genBitTest :: GlobalConstraint -> IO (BitTest, Int)
+genBitTest gc =
   case gc of
-    Num{}        -> error "Num is not a complex constraint"
-    Var{}        -> error "Var is not a complex constraint"
-    Eq c1 c2     -> genOp ref EqBits c1 c2
-    Neq c1 c2    -> genOp ref NeqBits c1 c2
-    And c1 c2    -> genOp ref AndBits c1 c2
-    Or c1 c2     -> genOp ref OrBits c1 c2
-    Add c1 c2    -> genOp ref AddBits c1 c2
-    LogicalNot c -> genUnary ref NotBits c
+    -- Number is unshifted: caller deals with this
+    Num n -> return (NoOp $ Val n, noShift)
+    -- Shift the variable all the way left so that it is isolated and ready to
+    -- be used. Also zero all the other bits so they don't get in the way
+    Var v -> do
+      print v
+      let sv = 32 - (high v - low v + 1)
+      return (BinOp (NoOp Encoding) ShiftBits (NoOp $ Val sv), shiftOf sv)
+    LogicalNot gc -> do
+      (bt, amt) <- genBitTest gc
+      return (UnaryOp NotBits bt, amt)
+    And gc1 gc2 -> simpleBitTest AndBits gc1 gc2
+    Or gc1 gc2  -> simpleBitTest OrBits gc1 gc2
+    Neq gc1 gc2 -> simpleBitTest XorBits gc1 gc2
+    Eq gc1 gc2 -> do
+      (bt, shift) <- simpleBitTest XorBits gc1 gc2
+      return (UnaryOp NotBits bt, shift)
+    _     -> error "Nope"
+    where simpleBitTest op gc1 gc2 = do
+            (bt1, shift1) <- genBitTest gc1
+            (bt2, shift2) <- genBitTest gc2
+            return (BinOp bt1 op bt2, shift1)
 
-genUnary :: IORef Int -> Op -> GlobalConstraint -> IO [BitTest]
-genUnary ref op c
-  | isNum c = error "You shouldn't be not-ing a constant idiot"
-  | isVar c = error "You shouldn't really be notting a var either? I mean I guess but"
-  | otherwise = do
-      test' <- genComplexConstraint ref c
-      varTemp <- readIORef ref
-      modifyIORef' ref (+ 1)
-      let (Test t) = head test'
-          tvar     = Temp $ "t" ++ show varTemp
-          temp     = mkAssign tvar t
-          newTest  = mkTest $ mkUnOp op tvar
-      return $ [newTest, temp] ++ tail test'
 
-genOp :: IORef Int -> Op -> GlobalConstraint -> GlobalConstraint -> IO [BitTest]
-genOp ref op c1 c2
-    | isNum c1 && isNum c2 = error "You shouldn't be making all-const constraints idiot"
-    | isVar c1 && isNum c2 = return $ genOpWithConst op c1 c2
-    | isNum c1 && isVar c2 = return $ genOpWithConst op c2 c1
-    | isVar c1 && isVar c2 = genOpWithVars ref op c1 c2
-    | otherwise = do
-        test1 <- genComplexConstraint ref c1
-        varTemp1 <- readIORef ref
-        modifyIORef' ref (+ 1)
-        let (Test t1) = head test1
-            tvar1     = Temp $ "t" ++ show varTemp1
-            temp1     = mkAssign tvar1 t1
-        test2 <- genComplexConstraint ref c2
-        varTemp2 <- readIORef ref
-        modifyIORef' ref (+ 1)
-        let (Test t2) = head test2
-            tvar2     = Temp $ "t" ++ show varTemp2
-            temp2     = mkAssign tvar2 t2
-        -- Some instructions are special
-        case op of
-          EqBits -> error "Not done"
-          _      -> do
-            let newTest   = mkTest $ mkBinOp tvar1 op tvar2
-            return $ [newTest, temp1, temp2] ++ tail test1 ++ tail test2
-
-genOpWithConst :: Op
-               -> GlobalConstraint -- ^ The variable
-               -> GlobalConstraint -- ^ The number
-               -> [BitTest]
-genOpWithConst op var num
-  | isVar var && isNum num =
-      -- Shift the constant to be even with the value, then do the test
-      let shiftedVal = Val $ val num `shiftL` low (slice var)
-      in [mkTest $ mkBinOp Encoding op shiftedVal]
-  | otherwise = error "Malformed inputs to genOpWithConst"
-
-genOpWithVars :: IORef Int
-              -> Op
-              -> GlobalConstraint -- ^ Variable
-              -> GlobalConstraint -- ^ Other variable
-              -> IO [BitTest]
-genOpWithVars ref op var1 var2
-    | isVar var1 && isVar var2 = do
-        (v1, name1) <- genVar ref $ slice var1
-        (v2, name2) <- genVar ref $ slice var2
-        return $ [mkTest $ mkBinOp name1 op name2] ++ v1 ++ v2
-    | otherwise = error "Malformed inputs to genOpWithVars"
-
--- | Use the slice numbers to zero out only the bits in the slice.
--- | Return an and of the sliced out shit, shifted all the way left.
-genVar :: IORef Int -> Slice -> IO ([BitTest], Var)
-genVar ref slice = do
-  andTemp <- readIORef ref
-  modifyIORef' ref (+ 1)
-  let andMaskVar   = Temp $ "t" ++ show andTemp
-      andMaskVal   = makeAndMask slice
-      andMask      = mkAssign andMaskVar $ mkBinOp Encoding AndBits andMaskVal
-
-  shiftTemp <- readIORef ref
-  modifyIORef' ref (+ 1)
-  let shiftMaskVar = Temp $ "t" ++ show shiftTemp
-      shiftMaskVal = makeShiftMask slice
-      shiftMask    = mkAssign shiftMaskVar $ mkBinOp andMaskVar ShiftBits shiftMaskVal
-
-  return ([andMask, shiftMask], shiftMaskVar)
-
-makeAndMask :: Slice -> Var
-makeAndMask s = Val $ (2 ^ (high s - low s + 1)) `shiftL` low s
-
-makeShiftMask :: Slice -> Var
-makeShiftMask s = Val $ low s
+genComplexConstraint :: IORef Int -> GlobalConstraint -> IO [BitTest]
+genComplexConstraint ref gc = do
+  (bt, _) <- genBitTest gc
+  return [bt]
