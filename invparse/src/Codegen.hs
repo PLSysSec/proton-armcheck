@@ -84,7 +84,7 @@ data BitTest = BinOp { left  :: BitTest
 
 instance Show BitTest where
     show (BinOp l o r) = unwords ["(", show l, ")", show o, "(", show r, ")"]
-    show (UnaryOp o n) = unwords [show o, show n]
+    show (UnaryOp o n) = unwords ["(", show o, show n, ")"]
     show (NoOp v)      = show v
 
 -- | Vars are either temporaries, constants, or the encoding itself
@@ -94,7 +94,7 @@ data Var = Val Int
 
 instance Show Var where
     show (Val i)  = show i
-    show Encoding = "enc"
+    show Encoding = "instr"
 
 -- | The operation: And, or, etc.
 data Op = AndBits
@@ -111,7 +111,7 @@ instance Show Op where
     show AndBits   = "&"
     show OrBits    = "|"
     show XorBits   = "^"
-    show ShiftBits = "<<"
+    show ShiftBits = ">>"
     show AddBits   = "+"
     show NotBits   = "~"
     show EqBits    = "=="
@@ -124,34 +124,32 @@ instance Show Op where
 noShift = -1
 shiftOf n = n
 
-genBitTest :: GlobalConstraint -> IO (BitTest, Int)
+genBitTest :: GlobalConstraint -> IO BitTest
 genBitTest gc =
   case gc of
-    -- Number is unshifted: caller deals with this
-    Num n -> return (NoOp $ Val n, noShift)
-    -- Shift the variable all the way left so that it is isolated and ready to
-    -- be used. Also zero all the other bits so they don't get in the way
+    Num n -> return $ NoOp $ Val n
     Var v -> do
-      print v
-      let sv = 32 - (high v - low v + 1)
-      return (BinOp (NoOp Encoding) ShiftBits (NoOp $ Val sv), shiftOf sv)
+      -- Shift the variable all the way right so that it is isolated and ready to use
+      -- Then mask it to eliminate any other irrelevant bits
+      let shifted = BinOp (NoOp Encoding) ShiftBits (NoOp $ Val $ low v)
+          masked  = 2 ^ (high v - low v + 1)
+      return $ BinOp shifted AndBits (NoOp $ Val masked)
     LogicalNot gc -> do
-      (bt, amt) <- genBitTest gc
-      return (UnaryOp NotBits bt, amt)
+      bt <- genBitTest gc
+      return $ UnaryOp NotBits bt
     And gc1 gc2 -> simpleBitTest AndBits gc1 gc2
     Or gc1 gc2  -> simpleBitTest OrBits gc1 gc2
-    Neq gc1 gc2 -> simpleBitTest XorBits gc1 gc2
-    Eq gc1 gc2 -> do
-      (bt, shift) <- simpleBitTest XorBits gc1 gc2
-      return (UnaryOp NotBits bt, shift)
-    _     -> error "Nope"
+    Add gc1 gc2 -> simpleBitTest AddBits gc1 gc2
+    Neq gc1 gc2 -> simpleBitTest XorBits gc1 gc2 -- returns 1 if gc1 != gc2
+    Eq gc1 gc2  -> do                            -- returns 1 if gc1 == gc2
+      bt <- simpleBitTest XorBits gc1 gc2
+      return $ UnaryOp NotBits bt
     where simpleBitTest op gc1 gc2 = do
-            (bt1, shift1) <- genBitTest gc1
-            (bt2, shift2) <- genBitTest gc2
-            return (BinOp bt1 op bt2, shift1)
-
+            bt1 <- genBitTest gc1
+            bt2 <- genBitTest gc2
+            return $ BinOp bt1 op bt2
 
 genComplexConstraint :: IORef Int -> GlobalConstraint -> IO [BitTest]
 genComplexConstraint ref gc = do
-  (bt, _) <- genBitTest gc
+  bt <- genBitTest gc
   return [bt]
