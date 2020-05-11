@@ -40,6 +40,42 @@ class TreeNode(object):
         else:
             print("%s- <%s> = 1: DEAD_END" % (" " * (indent + offset), str(self.posn)))
 
+    def to_code(self, indent=0):
+        (ostr, posns) = self._to_code(indent)
+        pstr = "int DEAD_END = -1;\n"
+        indent_str = " " * indent
+        for p in posns:
+            px = 31 - p
+            pstr += indent_str + "int instr_bit_%d = (instr & (1 << %d)) != 0;\n" % (p, px)
+        return pstr + ostr
+
+    def _to_code(self, indent=0):
+        indent_str = " " * indent
+        posns = set()
+        if self.is_leaf():
+            return (indent_str + "printf(\"%s\\n\");\n" % str(self.values), posns)
+
+        ostr = ""
+        posns.add(self.posn)
+        #ostr += indent_str + "int test_bit = (instr & (1 << %d)) == 1;\n" % self.posn
+        ostr += indent_str + "if (instr_bit_%d == 0) {\n" % self.posn
+        if self.left is None:
+            ostr += indent_str + "  return DEAD_END;\n"
+        else:
+            (lstr, lpos) = self.left._to_code(indent + 2)
+            ostr += lstr
+            posns.update(lpos)
+
+        ostr += indent_str + "} else {\n"
+        if self.right is None:
+            ostr += indent_str + "  return DEAD_END;\n"
+        else:
+            (rstr, rpos) = self.right._to_code(indent + 2)
+            ostr += rstr
+            posns.update(rpos)
+        ostr += indent_str + "}\n"
+        return (ostr, posns)
+
 # read in instructions file
 def read_instrs(infile):
     with open(infile, 'r') as f:
