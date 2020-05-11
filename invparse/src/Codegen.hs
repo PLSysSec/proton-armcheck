@@ -137,8 +137,8 @@ instance Show Op where
     show ShiftBits = "<<"
     show AddBits   = "+"
     show NotBits   = "~"
-    show EqBits    = "&"
-    show NeqBits   = "^"
+    show EqBits    = "=="
+    show NeqBits   = "!="
 
 ---
 --- Generating bittests
@@ -189,8 +189,12 @@ genOp ref op c1 c2
         let (Test t2) = head test2
             tvar2     = Temp $ "t" ++ show varTemp2
             temp2     = mkAssign tvar2 t2
-            newTest   = mkTest $ mkBinOp tvar1 op tvar2
-        return $ [newTest, temp1, temp2] ++ tail test1 ++ tail test2
+        -- Some instructions are special
+        case op of
+          EqBits -> error "Not done"
+          _      -> do
+            let newTest   = mkTest $ mkBinOp tvar1 op tvar2
+            return $ [newTest, temp1, temp2] ++ tail test1 ++ tail test2
 
 genOpWithConst :: Op
                -> GlobalConstraint -- ^ The variable
