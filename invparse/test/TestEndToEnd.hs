@@ -1,4 +1,5 @@
-module TestEndToEnd ( test1
+module TestEndToEnd ( test0
+                    , test1
                     , test2
                     ) where
 import           AST
@@ -32,6 +33,9 @@ fifteen = c 15
 n    = v 19 16
 t    = v 15 12
 m    = v 3 0
+
+test0 :: Test
+test0 = testCodegenC (m `eq'` one) 0 0
 
 test1 :: Test
 test1 = testCodegenC (m `eq'` one) 1 1
