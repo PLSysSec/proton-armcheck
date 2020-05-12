@@ -1,4 +1,6 @@
 module TestEndToEnd ( equality
+                    , ors
+                    , ands
                     , compound
                     ) where
 import           AST
@@ -34,19 +36,36 @@ t    = v 15 12
 m    = v 3 0
 
 equality :: [Test]
-equality = [ -- testCodegenC "e1" (m `eq'` one) 0 0
-           -- , testCodegenC "e2" (m `eq'` one) 1 1
-           -- , testCodegenC "e3" (p `eq'` one) 16777216 1
-           -- , testCodegenC "e4" (t `eq'` fifteen) 16777216 0
-           -- , testCodegenC "e5" (t `eq'` fifteen) 61440 1
-            testCodegenC "e6" (n `eq'` t) 765967 1
-           -- , testCodegenC "e7" (t `eq'` m) 61455 1
-           -- , testCodegenC "e8" (t `eq'` m) 61440 0
+equality = [ testCodegenC "e1" (m `eq'` one) 0 0
+           , testCodegenC "e2" (m `eq'` one) 1 1
+           , testCodegenC "e3" (p `eq'` one) 16777216 1
+           , testCodegenC "e4" (t `eq'` fifteen) 16777216 0
+           , testCodegenC "e5" (t `eq'` fifteen) 61440 1
+           , testCodegenC "e6" (n `eq'` t) 765967 1
+           , testCodegenC "e7" (t `eq'` m) 61455 1
+           , testCodegenC "e8" (t `eq'` m) 61440 0
            ]
+
+ors :: [Test]
+ors = [ testCodegenC "o1" ((m `eq'` one) `or'` (n `eq'` one)) 1 1
+      , testCodegenC "o1" ((m `eq'` one) `or'` (n `eq'` one)) 2 0
+      , testCodegenC "o1" ((m `eq'` one) `or'` (n `eq'` one)) 65536 1
+      , testCodegenC "o1" ((m `eq'` one) `or'` (n `eq'` one)) 196608 0
+      , testCodegenC "o1" ((m `eq'` one) `or'` (n `eq'` one)) 65537 1
+      ]
+
+ands :: [Test]
+ands = [ testCodegenC "a1" ((m `eq'` one) `and'` (n `eq'` one)) 1 0
+       , testCodegenC "a1" ((m `eq'` one) `and'` (n `eq'` one)) 2 0
+       , testCodegenC "a1" ((m `eq'` one) `and'` (n `eq'` one)) 65536 0
+       , testCodegenC "a1" ((m `eq'` one) `and'` (n `eq'` one)) 196608 0
+       , testCodegenC "a1" ((m `eq'` one) `and'` (n `eq'` one)) 65537 1
+       ]
 
 compound :: [Test]
 compound = [ testCodegenC "c1" (not' $ m `eq'` one) 0 1
---           , testCodegenC "c2" (m `eq'` (one `add'` one)) 2 1
+           , testCodegenC "c2" (m `eq'` (one `add'` one)) 2 1
+           , testCodegenC "c3" (not' $ m `eq'` one) 1 0
            ]
 
 testCodegenC :: String
