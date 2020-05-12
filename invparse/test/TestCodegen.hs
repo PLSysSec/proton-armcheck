@@ -18,20 +18,20 @@ num = NoOp . Val
 testEq :: Test
 testEq =
   let eqs = [ p `eq'` zero
-           , m `eq'` one
+            , m `eq'` one
             -- , n `eq'` t
             ]
       ex1 = UnaryOp NotBits (BinOp (BinOp (BinOp e ShiftBits (num 24)) AndBits (num 1)) XorBits (num 0))
-      ex2 = undefined
+      ex2 = UnaryOp NotBits (BinOp (BinOp (BinOp e ShiftBits (num 0)) AndBits (num 15)) XorBits (num 1))
       ex3 = undefined
-      exs = [ex1]
+      exs = [ex1, ex2]
   in testCodegenConstraints (instr eqs, "eqs") exs
 
 testCodegenConstraints :: (Instruction, String) -> [BitTest] -> Test
 testCodegenConstraints instr expected = TestCase $ do
   match <- genConstantMatchInstr instr
   assertEqual "Mismatched lengths" (length expected) (length $ constraints match)
-  forM_ (zip expected (map constraintTest $ constraints match)) $ \(e, a) ->
-    assertEqual "Unexpected constraints" e a --expected (map constraintTest $ constraints match)
+  forM_ (zip expected (reverse $ map constraintTest $ constraints match)) $ \(e, a) ->
+    assertEqual "Unexpected constraints" e a
 
 

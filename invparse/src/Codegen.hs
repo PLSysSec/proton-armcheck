@@ -129,7 +129,7 @@ genBitTest gc =
       -- Shift the variable all the way right so that it is isolated and ready to use
       -- Then mask it to eliminate any other irrelevant bits
       let shifted = BinOp (NoOp Encoding) ShiftBits (NoOp $ Val $ low v)
-          masked  = 2 ^ (high v - low v)
+          masked  = (2 ^ (1 + high v - low v)) - 1
       return $ BinOp shifted AndBits (NoOp $ Val masked)
     LogicalNot gc -> do
       bt <- genBitTest gc
