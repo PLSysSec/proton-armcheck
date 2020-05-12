@@ -52,7 +52,7 @@ testCodegenC c i expected = TestCase $ do
                      , "printf(\"%d\", x);"
                      , "}"
                      ]
-  assertEqual "Expected equal" (show expected) i
+  assertEqual "Expected equal" expected i
 
 readCommand
     :: FilePath              -- ^ Filename of the executable (see 'proc' for details)
@@ -68,9 +68,6 @@ readCommand proc args input = do
             terminateProcess pid; waitForProcess pid) $ restore $ do
         -- fork off a thread to start consuming stdout
         out <- hGetContents outh
-        putStrLn "This is the expected result:"
-        print out
-
         waitOut <- forkWait $ C.evaluate $ rnf out
 
         -- now write and flush any input
@@ -115,7 +112,6 @@ cpp src = do
 
   -- run
   (code,out) <- readCommand cmd [] ""
-  print "But then we error..."
 
   unless (code == ExitSuccess) $ fail out
   readIO out
