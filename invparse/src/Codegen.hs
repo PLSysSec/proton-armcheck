@@ -24,8 +24,7 @@ data InstrMatch = InstrMatch { iname       :: String
 
 instance Show InstrMatch where
   show (InstrMatch name str constrs) =
-    let tests = intercalate "\n" $ map show constrs
-    in (unlines [name ++ ":", str]) ++ tests
+    unlines [name ++ ":", str] ++ unlines (map show constrs)
 
 type BitStr = String
 
@@ -34,8 +33,8 @@ genConstantMatchInstr (inst, name) = do
   bstr <- mapM genInstrMatch $ reverse $ allBits inst
   let bitstring = concat $ catMaybes bstr
   ref <- newIORef 0
-  tests <- mapM (genComplexConstraint ref) $ complexConstraints inst
-  return $ InstrMatch name bitstring (map mkConstraint tests)
+  test <- mapM genBitTest $ complexConstraints inst
+  return $ InstrMatch name bitstring $ map mkConstraint test
 
 genInstrMatch :: Bits -> IO (Maybe BitStr)
 genInstrMatch bits =
@@ -59,15 +58,14 @@ genInstrMatch bits =
 ---
 
 -- | Constraints on an instruction
-data InstrConstraint = BitConstraint String [BitTest]
+data InstrConstraint = BitConstraint String BitTest
                    deriving (Eq, Ord)
 
 
 instance Show InstrConstraint where
-    show (BitConstraint str tests) =
-      unlines $ ["Tests for" ++ str ++ ":"] ++ map show (reverse tests)
+    show (BitConstraint str test) = unlines ["Test for" ++ str ++ ":", show test]
 
-mkConstraint :: [BitTest] -> InstrConstraint
+mkConstraint :: BitTest -> InstrConstraint
 mkConstraint = BitConstraint "Debug"
 
 -- | A test can either be a top-level comparison against 1,
@@ -121,9 +119,6 @@ instance Show Op where
 --- Generating bittests
 ---
 
-noShift = -1
-shiftOf n = n
-
 genBitTest :: GlobalConstraint -> IO BitTest
 genBitTest gc =
   case gc of
@@ -149,7 +144,3 @@ genBitTest gc =
             bt2 <- genBitTest gc2
             return $ BinOp bt1 op bt2
 
-genComplexConstraint :: IORef Int -> GlobalConstraint -> IO [BitTest]
-genComplexConstraint ref gc = do
-  bt <- genBitTest gc
-  return [bt]
