@@ -22,12 +22,25 @@ import           System.IO
 import           System.Process
 import           Test.HUnit.Base
 
+p    = v 24 24
+w    = v 21 21
+zero = c 0
+one  = c 1
+fifteen = c 15
+n    = v 19 16
+t    = v 15 12
+m    = v 3 0
 
-testCodegenC :: (GlobalConstraint, Int) -- ^ Constraint, input value
-             -> Int                     -- ^ Expected result
-             -> Test                    -- ^ Actual result
-testCodegenC (c, i) expected = TestCase $ do
-  let instr = (Instruction [Global c], "test")
+test1 :: Test
+test1 = testCodegenC (m `eq'` one) 1 1
+
+
+testCodegenC :: Bits -- ^ constraint
+             -> Int  -- ^ input
+             -> Int  -- ^ expected result
+             -> Test -- ^ actual result
+testCodegenC c i expected = TestCase $ do
+  let instr = (Instruction [c], "test")
   match <- genConstantMatchInstr instr
   let eq = constraints match
   assertEqual "Bad number of constraints" 0 (length eq)
