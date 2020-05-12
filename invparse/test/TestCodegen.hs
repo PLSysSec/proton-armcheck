@@ -19,12 +19,14 @@ testEq :: Test
 testEq =
   let eqs = [ p `eq'` zero
             , m `eq'` one
-            -- , n `eq'` t
+            , n `eq'` t
             ]
       ex1 = UnaryOp NotBits (BinOp (BinOp (BinOp e ShiftBits (num 24)) AndBits (num 1)) XorBits (num 0))
       ex2 = UnaryOp NotBits (BinOp (BinOp (BinOp e ShiftBits (num 0)) AndBits (num 15)) XorBits (num 1))
-      ex3 = undefined
-      exs = [ex1, ex2]
+      nex = BinOp (BinOp e ShiftBits (num 16)) AndBits (num 15)
+      tex = BinOp (BinOp e ShiftBits (num 12)) AndBits (num 15)
+      ex3 = UnaryOp NotBits (BinOp nex XorBits tex)
+      exs = [ex1, ex2, ex3]
   in testCodegenConstraints (instr eqs, "eqs") exs
 
 testCodegenConstraints :: (Instruction, String) -> [BitTest] -> Test
