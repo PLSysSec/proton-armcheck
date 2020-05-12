@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e7dc5b1e2eca3b277f69869f0de7f3af00886cee4b24b7352bcb5f1f6d63d684
+-- hash: bc48d92b30ed4cfeeadb15e9b4361058fd1c5a6a2c94d3b50c4366bf92679f9b
 
 name:           invparse
 version:        0.1.0.0
@@ -59,11 +59,13 @@ test-suite invparse-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      TestCodegen
       Paths_invparse
   hs-source-dirs:
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      HUnit >=1.6
+    , base >=4.7 && <5
     , invparse
   default-language: Haskell2010
