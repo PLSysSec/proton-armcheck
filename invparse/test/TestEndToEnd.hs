@@ -54,7 +54,7 @@ testCodegenC c i expected = TestCase $ do
                      , "int main(int argc, char *argv[]) {"
                      , "uint32_t instr = " ++ show i ++ ";"
                      , "uint32_t x =" ++ showCompilable (head eq) ++ ";"
-                     , "printf(\"%d\", x);"
+                     , "printf(\"%u\", x);"
                      , "}"
                      ]
   assertEqual "Expected equal" expected i
