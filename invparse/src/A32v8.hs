@@ -89,7 +89,7 @@ ldrlit = [ not 31 28 0b1111
          , constant 20 16 0b11111
          , reg 15 12
          , any 11 0 -- imm12. what do we do here
-         , not' $ (p `eq'` zero) `or'` (w `eq'` one)
+         , (p `eq'` zero) `or'` (w `eq'` one)
          ]
 
 ldrreg = [ not 31 28 0b1111
@@ -104,8 +104,8 @@ ldrreg = [ not 31 28 0b1111
          , any 6 5 -- stype
          , constant 4 4 0
          , reg 3 0
-         , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` c 15)
-         , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+         , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` c 15)
+         , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
          ]
 
 ldrbimm = [ not 31 28 0b1111
@@ -118,7 +118,8 @@ ldrbimm = [ not 31 28 0b1111
           , reg 15 12
 --          , not 15 12 15
           , any 11 0 -- imm12. what do we do here
-          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+          -- restrictions
+          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
           ]
 
 ldrblit = [ not 31 28 0b1111
@@ -131,7 +132,7 @@ ldrblit = [ not 31 28 0b1111
           , reg 15 12
 --          , not 15 12 15
           , any 11 0 -- imm12. what do we do here
-          , not' $ (p `eq'` zero) `or'` (w `eq'` one)
+          , (p `eq'` zero) `or'` (w `eq'` one)
           ]
 
 ldrbreg = [ not 31 28 0b1111
@@ -146,8 +147,8 @@ ldrbreg = [ not 31 28 0b1111
           , any 6 5 -- stype
           , constant 4 4 0
           , reg 3 0
-          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` c 15)
-          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` c 15)
+          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
           ]
 
 ldrdimm = [ not 31 28 0b1111
@@ -164,9 +165,9 @@ ldrdimm = [ not 31 28 0b1111
           , any 3 0 -- imm4L
             -- restrictions
 --          , not 15 12 0
-          , not' $ (p `eq'` zero) `and'` (w `eq'` one)
-          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` ((n `eq'` t) `or'` (n `eq'` (t `add'` one)))
-          , not' $ (t `add'` one) `eq'` fifteen
+          , (p `eq'` zero) `and'` (w `eq'` one)
+          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` ((n `eq'` t) `or'` (n `eq'` (t `add'` one)))
+          , (t `add'` one) `eq'` fifteen
           ]
 
 ldrdlit = [ not 31 28 0b1111
@@ -198,14 +199,14 @@ ldrdreg = [ not 31 28 0b1111
           , reg 3 0
           -- restrictions
 --          , not 12 12 1 -- not Rt<0> == 1
-          , not' $ (p `eq'` zero) `and'` (w `eq'` one)
-          , not' $ m `eq'` fifteen
-          , not' $ t `eq'` (c 14)
-          , not' $ m `eq'` t
-          , not' $ m `eq'` (t `add'` one)
-          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` c 15)
-          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
-          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` (t `add'` one))
+          , (p `eq'` zero) `and'` (w `eq'` one)
+          , m `eq'` fifteen
+          , t `eq'` (c 14)
+          , m `eq'` t
+          , m `eq'` (t `add'` one)
+          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` c 15)
+          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` (t `add'` one))
           ]
 
 ldrhimm = [ not 31 28 0b1111
@@ -222,8 +223,8 @@ ldrhimm = [ not 31 28 0b1111
           , constant 7 4 0b1011
           , any 3 0 -- imm4L
             -- restrictions
-          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
-          , not' $ (t `add'` one) `eq'` fifteen
+          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+          , (t `add'` one) `eq'` fifteen
           ]
 
 ldrhlit = [ not 31 28 0b1111
@@ -238,8 +239,8 @@ ldrhlit = [ not 31 28 0b1111
           , constant 7 4 0b1011
           , any 3 0 -- imm4L
             -- restrictions
-          , not' $ (p `eq'` zero) `or'` (w `eq'` one)
-          , not' $ t `eq'` fifteen
+          , (p `eq'` zero) `or'` (w `eq'` one)
+          , t `eq'` fifteen
           ]
 
 ldrhreg = [ not 31 28 0b1111
@@ -255,9 +256,9 @@ ldrhreg = [ not 31 28 0b1111
           , reg 3 0
           -- restrictions
 --          , not 12 12 1 -- not Rt<0> == 1
-          , not' $ (t `eq'` fifteen) `or'` (m `eq'` fifteen)
-          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
-          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+          , (t `eq'` fifteen) `or'` (m `eq'` fifteen)
+          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
+          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
           ]
 
 ldrsbimm = [ not 31 28 0b1111
@@ -273,8 +274,8 @@ ldrsbimm = [ not 31 28 0b1111
            , constant 7 4 0b1101
            , any 3 0 -- imm4L
            -- restrictions
-           , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
-           , not' $ (t `add'` one) `eq'` fifteen
+           , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+           , (t `add'` one) `eq'` fifteen
            ]
 
 ldrsblit = [ not 31 28 0b1111
@@ -289,8 +290,8 @@ ldrsblit = [ not 31 28 0b1111
            , constant 7 4 0b1101
            , any 3 0 -- imm4L
                      -- restrictions
-           , not' $ (p `eq'` zero) `or'` (w `eq'` one)
-           , not' $ t `eq'` fifteen
+           , (p `eq'` zero) `or'` (w `eq'` one)
+           , t `eq'` fifteen
            ]
 
 ldrsbreg = [ not 31 28 0b1111
@@ -305,9 +306,9 @@ ldrsbreg = [ not 31 28 0b1111
            , constant 7 4 0b1101
            , reg 3 0
            -- restrictions
-           , not' $ (t `eq'` fifteen) `or'` (m `eq'` fifteen)
-           , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
-           , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+           , (t `eq'` fifteen) `or'` (m `eq'` fifteen)
+           , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
+           , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
            ]
 
 ldrshimm = [ not 31 28 0b1111
@@ -323,8 +324,8 @@ ldrshimm = [ not 31 28 0b1111
            , constant 7 4 0b1111
            , any 3 0 -- imm4L
            -- restrictions
-           , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
-           , not' $ t `eq'` fifteen
+           , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+           , t `eq'` fifteen
            ]
 
 ldrshlit = [ not 31 28 0b1111
@@ -339,8 +340,8 @@ ldrshlit = [ not 31 28 0b1111
            , constant 7 4 0b1111
            , any 3 0 -- imm4L
                      -- restrictions
-           , not' $ (p `eq'` zero) `or'` (w `eq'` one)
-           , not' $ t `eq'` fifteen
+           , (p `eq'` zero) `or'` (w `eq'` one)
+           , t `eq'` fifteen
            ]
 
 ldrshreg = [ not 31 28 0b1111
@@ -355,9 +356,9 @@ ldrshreg = [ not 31 28 0b1111
            , constant 7 4 0b1111
            , reg 3 0
            -- restrictions
-           , not' $ (t `eq'` fifteen) `or'` (m `eq'` fifteen)
-           , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
-           , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+           , (t `eq'` fifteen) `or'` (m `eq'` fifteen)
+           , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
+           , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
            ]
 
 -- Stores
@@ -373,8 +374,8 @@ strimm = [ not 31 28 0b1111
          , reg 15 12
          , any 11 0 -- imm12. what do we do here
          -- restrictions
-         , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
-         , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
+         , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+         , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
          ]
 
 strreg = [ not 31 28 0b1111
@@ -390,9 +391,9 @@ strreg = [ not 31 28 0b1111
          , constant 4 4 0
          , reg 3 0
          -- restrictions
-         , not' $ m `eq'` fifteen
-         , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
-         , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+         , m `eq'` fifteen
+         , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
+         , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
          ]
 
 strbimm = [ not 31 28 0b1111
@@ -405,9 +406,9 @@ strbimm = [ not 31 28 0b1111
           , reg 15 12
           , any 11 0 -- imm12. what do we do here
           -- restrictions
-          , not' $ t `eq'` fifteen
-          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
-          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
+          , t `eq'` fifteen
+          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
           ]
 
 strbreg = [ not 31 28 0b1111
@@ -423,10 +424,10 @@ strbreg = [ not 31 28 0b1111
           , constant 4 4 0
           , reg 3 0
           -- restrictions
-          , not' $ t `eq'` fifteen
-          , not' $ m `eq'` fifteen
-          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` c 15)
-          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+          , t `eq'` fifteen
+          , m `eq'` fifteen
+          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` c 15)
+          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
           ]
 
 strdimm = [ not 31 28 0b1111
@@ -442,8 +443,8 @@ strdimm = [ not 31 28 0b1111
           , constant 7 4 0b1111
           , any 3 0 -- imm4L
             -- restrictions
-          , not' $ (p `eq'` zero) `and'` (w `eq'` one)
-          , not' $ n `eq'` fifteen
+          , (p `eq'` zero) `and'` (w `eq'` one)
+          , n `eq'` fifteen
           ]
 
 strdreg = [ not 31 28 0b1111
@@ -458,9 +459,9 @@ strdreg = [ not 31 28 0b1111
           , constant 7 4 0b1111
           , reg 3 0
           -- restrictions
-          , not' $ (p `eq'` zero) `or'` (w `eq'` one)
-          , not' $ m `eq'` fifteen
-          , not' $ (t `add'` one) `eq'` fifteen
+          , (p `eq'` zero) `or'` (w `eq'` one)
+          , m `eq'` fifteen
+          , (t `add'` one) `eq'` fifteen
           ]
 
 strhimm = [ not 31 28 0b1111
@@ -475,9 +476,9 @@ strhimm = [ not 31 28 0b1111
           , constant 7 4 0b1011
           , any 3 0 -- imm4L
             -- restrictions
-          , not' $ t `eq'` fifteen
-          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
-          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+          , t `eq'` fifteen
+          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
+          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
           ]
 
 strhreg = [ not 31 28 0b1111
@@ -492,9 +493,9 @@ strhreg = [ not 31 28 0b1111
           , constant 7 4 0b1011
           , reg 3 0
           -- restrictions
-          , not' $ (t `eq'` fifteen) `or'` (m `eq'` fifteen)
-          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
-          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+          , (t `eq'` fifteen) `or'` (m `eq'` fifteen)
+          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` fifteen)
+          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
           ]
 
 -- Atomic loads
