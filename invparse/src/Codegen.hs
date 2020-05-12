@@ -145,10 +145,8 @@ genBitTest gc =
     And gc1 gc2 -> simpleBitTest AndBits gc1 gc2
     Or gc1 gc2  -> simpleBitTest OrBits gc1 gc2
     Add gc1 gc2 -> simpleBitTest AddBits gc1 gc2
-    Neq gc1 gc2 -> simpleBitTest XorBits gc1 gc2 -- returns 1 if gc1 != gc2
-    Eq gc1 gc2  -> do                            -- returns 1 if gc1 == gc2
-      bt <- simpleBitTest XorBits gc1 gc2
-      return $ TernOp bt (NoOp $ Val 0) (NoOp $ Val 1)
+    Neq gc1 gc2 -> simpleBitTest NeqBits gc1 gc2
+    Eq gc1 gc2  -> simpleBitTest EqBits gc1 gc2
     where simpleBitTest op gc1 gc2 = do
             bt1 <- genBitTest gc1
             bt2 <- genBitTest gc2
