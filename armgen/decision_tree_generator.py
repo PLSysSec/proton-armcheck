@@ -291,9 +291,22 @@ def test(instr_file):
     from _ckinstr import ffi, lib
 
     # first, test random values that match known instructions
-    for _ in range(0, 256):
+    for _ in range(0, 8192):
         target_instr = choice(instrs)
         instr = fix_instr(target_instr, getrandbits(32))
         ret = lib.check_instr(instr)
         if ret != TreeNode.instrs.index(target_instr):
             print(TreeNode.names[target_instr], to_bits(instr))
+
+    # next, generate random instructions, match them manually, then make sure the tree agrees
+    for _ in range(0, 8192):
+        instr = getrandbits(32)
+        matches = [ tmpl for tmpl in instrs if match_instr(tmpl, instr) ]
+        ret = lib.check_instr(instr)
+        if not matches:
+            assert ret == -1
+        if matches:
+            assert TreeNode.instrs[ret] in matches
+
+if __name__ == "__main__":
+    test("instrs")
