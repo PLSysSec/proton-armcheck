@@ -219,6 +219,7 @@ eq' :: Bits -> Bits -> Bits
 eq' (Global c1) (Global c2) = Global $ Eq c1 c2
 eq' _ _                     = error "Expected global constraint argument to eq"
 
+-- | Logical not (not bitwise not)
 not' :: Bits -> Bits
 not' (Global c) = Global $ LogicalNot c
 

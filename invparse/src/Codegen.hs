@@ -79,7 +79,7 @@ data BitTest = BinOp { left  :: BitTest
                      , op    :: Op
                      , right :: BitTest
                      }
-             | NotOp { node :: BitTest }
+             | NotOp { node :: BitTest } -- Logical, not bitwise not
              | TernOp { cond    :: BitTest
                       , trueBr  :: BitTest
                       , falseBr :: BitTest
@@ -88,8 +88,8 @@ data BitTest = BinOp { left  :: BitTest
              deriving (Eq, Ord)
 
 instance Show BitTest where
-    show (BinOp l o r)  = unwords ["(", show l, ")", show o, "(", show r, ")"]
-    show (NotOp n)      = unwords ["(", show n, ">= 0 ? 0 : 1 )"]
+    show (BinOp l o r)  = unwords ["((", show l, ")", show o, "(", show r, "))"]
+    show (NotOp n)      = unwords ["((", show n, "== 0) ? 1 : 0 )"]
     show (TernOp c t f) = unwords ["(",  show c, "?", show t, ":", show f, ")"]
     show (NoOp v)       = show v
 
@@ -108,7 +108,6 @@ data Op = AndBits
         | XorBits
         | ShiftBits
         | AddBits
-        | NotBits
         | EqBits
         | NeqBits
         deriving (Eq, Ord)

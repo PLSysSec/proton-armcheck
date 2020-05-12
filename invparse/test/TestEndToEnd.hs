@@ -1,6 +1,7 @@
 module TestEndToEnd ( equality
                     , ors
                     , ands
+                    , nots
                     , compound
                     ) where
 import           AST
@@ -48,18 +49,31 @@ equality = [ testCodegenC "e1" (m `eq'` one) 0 0
 
 ors :: [Test]
 ors = [ testCodegenC "o1" ((m `eq'` one) `or'` (n `eq'` one)) 1 1
-      , testCodegenC "o1" ((m `eq'` one) `or'` (n `eq'` one)) 2 0
-      , testCodegenC "o1" ((m `eq'` one) `or'` (n `eq'` one)) 65536 1
-      , testCodegenC "o1" ((m `eq'` one) `or'` (n `eq'` one)) 196608 0
-      , testCodegenC "o1" ((m `eq'` one) `or'` (n `eq'` one)) 65537 1
+      , testCodegenC "o2" ((m `eq'` one) `or'` (n `eq'` one)) 2 0
+      , testCodegenC "o3" ((m `eq'` one) `or'` (n `eq'` one)) 65536 1
+      , testCodegenC "o4" ((m `eq'` one) `or'` (n `eq'` one)) 196608 0
+      , testCodegenC "o5" ((m `eq'` one) `or'` (n `eq'` one)) 65537 1
       ]
 
 ands :: [Test]
 ands = [ testCodegenC "a1" ((m `eq'` one) `and'` (n `eq'` one)) 1 0
-       , testCodegenC "a1" ((m `eq'` one) `and'` (n `eq'` one)) 2 0
-       , testCodegenC "a1" ((m `eq'` one) `and'` (n `eq'` one)) 65536 0
-       , testCodegenC "a1" ((m `eq'` one) `and'` (n `eq'` one)) 196608 0
-       , testCodegenC "a1" ((m `eq'` one) `and'` (n `eq'` one)) 65537 1
+       , testCodegenC "a2" ((m `eq'` one) `and'` (n `eq'` one)) 2 0
+       , testCodegenC "a3" ((m `eq'` one) `and'` (n `eq'` one)) 65536 0
+       , testCodegenC "a4" ((m `eq'` one) `and'` (n `eq'` one)) 196608 0
+       , testCodegenC "a5" ((m `eq'` one) `and'` (n `eq'` one)) 65537 1
+       ]
+
+nots :: [Test]
+nots = [ testCodegenC "n1" (not' $ (m `eq'` one) `and'` (n `eq'` one)) 1 1
+       , testCodegenC "n2" (not' $ (m `eq'` one) `and'` (n `eq'` one)) 2 1
+       , testCodegenC "n3" (not' $ (m `eq'` one) `and'` (n `eq'` one)) 65536 1
+       , testCodegenC "n4" (not' $ (m `eq'` one) `and'` (n `eq'` one)) 196608 1
+       , testCodegenC "n5" (not' $ (m `eq'` one) `and'` (n `eq'` one)) 65537 0
+       , testCodegenC "n6" (not' $ (m `eq'` one) `or'` (n `eq'` one)) 1 0
+       , testCodegenC "n7" (not' $ (m `eq'` one) `or'` (n `eq'` one)) 2 1
+       , testCodegenC "n8" (not' $ (m `eq'` one) `or'` (n `eq'` one)) 65536 0
+       , testCodegenC "n9" (not' $ (m `eq'` one) `or'` (n `eq'` one)) 196608 1
+       , testCodegenC "n10" (not' $ (m `eq'` one) `or'` (n `eq'` one)) 65537 0
        ]
 
 compound :: [Test]
