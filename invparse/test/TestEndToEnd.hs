@@ -1,4 +1,6 @@
-module TestEndToEnd (test1) where
+module TestEndToEnd ( test1
+                    , test2
+                    ) where
 import           AST
 import           Foreign.C
 import           GHC.IO.Exception   (IOErrorType (..), IOException (..))
@@ -33,6 +35,9 @@ m    = v 3 0
 
 test1 :: Test
 test1 = testCodegenC (m `eq'` one) 1 1
+
+test2 :: Test
+test2 = testCodegenC (p `eq'` one) 16777216 1
 
 
 testCodegenC :: Bits -- ^ constraint
