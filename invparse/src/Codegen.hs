@@ -82,13 +82,18 @@ data BitTest = BinOp { left  :: BitTest
              | UnaryOp { op   :: Op
                        , node :: BitTest
                        }
+             | TernOp { cond    :: BitTest
+                      , trueBr  :: BitTest
+                      , falseBr :: BitTest
+                      }
              | NoOp { var :: Var }
              deriving (Eq, Ord)
 
 instance Show BitTest where
-    show (BinOp l o r) = unwords ["(", show l, ")", show o, "(", show r, ")"]
-    show (UnaryOp o n) = unwords ["(", show o, show n, ")"]
-    show (NoOp v)      = show v
+    show (BinOp l o r)  = unwords ["(", show l, ")", show o, "(", show r, ")"]
+    show (UnaryOp o n)  = unwords ["(", show o, show n, ")"]
+    show (TernOp c t f) = unwords ["(",  show c, "?", show t, ":", show f, ")"]
+    show (NoOp v)       = show v
 
 -- | Vars are either temporaries, constants, or the encoding itself
 data Var = Val Int
@@ -143,7 +148,7 @@ genBitTest gc =
     Neq gc1 gc2 -> simpleBitTest XorBits gc1 gc2 -- returns 1 if gc1 != gc2
     Eq gc1 gc2  -> do                            -- returns 1 if gc1 == gc2
       bt <- simpleBitTest XorBits gc1 gc2
-      return $ UnaryOp NotBits bt
+      return $ TernOp bt (NoOp $ Val 0) (NoOp $ Val 1)
     where simpleBitTest op gc1 gc2 = do
             bt1 <- genBitTest gc1
             bt2 <- genBitTest gc2
