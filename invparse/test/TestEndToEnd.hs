@@ -80,6 +80,9 @@ compound :: [Test]
 compound = [ testCodegenC "c1" (not' $ m `eq'` one) 0 1
            , testCodegenC "c2" (m `eq'` (one `add'` one)) 2 1
            , testCodegenC "c3" (not' $ m `eq'` one) 1 0
+           , testCodegenC "c4" (((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)) 12345 0
+           , testCodegenC "c4" (((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)) 1187840 1
+           , testCodegenC "c4" (((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)) 1187855 1
            ]
 
 testCodegenC :: String

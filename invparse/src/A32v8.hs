@@ -78,7 +78,6 @@ ldrimm = [ not 31 28 0b1111
          , reg 15 12
          , any 11 0 -- imm12.
          -- restrictions
---         , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
          , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
          ]
 
