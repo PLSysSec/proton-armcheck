@@ -1,4 +1,6 @@
-module TestEndToEnd ( equality ) where
+module TestEndToEnd ( equality
+                    , compound
+                    ) where
 import           AST
 import           Foreign.C
 import           GHC.IO.Exception   (IOErrorType (..), IOException (..))
@@ -32,22 +34,27 @@ t    = v 15 12
 m    = v 3 0
 
 equality :: [Test]
-equality = [ testCodegenC (m `eq'` one) 0 0
-           , testCodegenC (m `eq'` one) 1 1
-           , testCodegenC (p `eq'` one) 16777216 1
-           , testCodegenC (t `eq'` fifteen) 16777216 0
-           , testCodegenC (m `eq'` (one `add'` one)) 2 1
-           , testCodegenC (t `eq'` fifteen) 61440 1
-           , testCodegenC (n `eq'` t) 765967 1
-           , testCodegenC (t `eq'` m) 61455 1
-           , testCodegenC (t `eq'` m) 61440 0
+equality = [ -- testCodegenC "e1" (m `eq'` one) 0 0
+           -- , testCodegenC "e2" (m `eq'` one) 1 1
+           -- , testCodegenC "e3" (p `eq'` one) 16777216 1
+           -- , testCodegenC "e4" (t `eq'` fifteen) 16777216 0
+           -- , testCodegenC "e5" (t `eq'` fifteen) 61440 1
+            testCodegenC "e6" (n `eq'` t) 765967 1
+           -- , testCodegenC "e7" (t `eq'` m) 61455 1
+           -- , testCodegenC "e8" (t `eq'` m) 61440 0
            ]
 
-testCodegenC :: Bits -- ^ constraint
+compound :: [Test]
+compound = [ testCodegenC "c1" (not' $ m `eq'` one) 0 1
+--           , testCodegenC "c2" (m `eq'` (one `add'` one)) 2 1
+           ]
+
+testCodegenC :: String
+             -> Bits -- ^ constraint
              -> Int  -- ^ input
              -> Int  -- ^ expected result
              -> Test -- ^ actual result
-testCodegenC c i expected = TestCase $ do
+testCodegenC name c i expected = TestCase $ do
   let instr = (Instruction [c], "test")
   match <- genConstantMatchInstr instr
   let eq = constraints match
@@ -55,12 +62,12 @@ testCodegenC c i expected = TestCase $ do
   i <- cpp $ unlines [ "#include <stdio.h>"
                      , "#include <stdint.h>"
                      , "int main(int argc, char *argv[]) {"
-                     , "uint32_t instr = " ++ show i ++ ";"
-                     , "uint32_t x =" ++ showCompilable (head eq) ++ ";"
-                     , "printf(\"%u\", x);"
+                     , "    uint32_t instr = " ++ show i ++ ";"
+                     , "    uint32_t x = " ++ showCompilable (head eq) ++ ";"
+                     , "    printf(\"%u\", x);"
                      , "}"
                      ]
-  assertEqual "Expected equal" expected i
+  assertEqual ("Failed:" ++ name) expected i
 
 readCommand
     :: FilePath              -- ^ Filename of the executable (see 'proc' for details)

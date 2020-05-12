@@ -79,9 +79,7 @@ data BitTest = BinOp { left  :: BitTest
                      , op    :: Op
                      , right :: BitTest
                      }
-             | UnaryOp { op   :: Op
-                       , node :: BitTest
-                       }
+             | NotOp { node :: BitTest }
              | TernOp { cond    :: BitTest
                       , trueBr  :: BitTest
                       , falseBr :: BitTest
@@ -91,7 +89,7 @@ data BitTest = BinOp { left  :: BitTest
 
 instance Show BitTest where
     show (BinOp l o r)  = unwords ["(", show l, ")", show o, "(", show r, ")"]
-    show (UnaryOp o n)  = unwords ["(", show o, show n, ")"]
+    show (NotOp n)      = unwords ["(", show n, ">= 0 ? 0 : 1 )"]
     show (TernOp c t f) = unwords ["(",  show c, "?", show t, ":", show f, ")"]
     show (NoOp v)       = show v
 
@@ -121,7 +119,6 @@ instance Show Op where
     show XorBits   = "^"
     show ShiftBits = ">>"
     show AddBits   = "+"
-    show NotBits   = "~"
     show EqBits    = "=="
     show NeqBits   = "!="
 
@@ -141,7 +138,7 @@ genBitTest gc =
       return $ BinOp shifted AndBits (NoOp $ Val masked)
     LogicalNot gc -> do
       bt <- genBitTest gc
-      return $ UnaryOp NotBits bt
+      return $ NotOp bt
     And gc1 gc2 -> simpleBitTest AndBits gc1 gc2
     Or gc1 gc2  -> simpleBitTest OrBits gc1 gc2
     Add gc1 gc2 -> simpleBitTest AddBits gc1 gc2

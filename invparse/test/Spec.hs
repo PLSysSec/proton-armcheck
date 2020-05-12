@@ -1,7 +1,6 @@
 import           Control.Monad   (mapM_)
 import           Test.HUnit.Text
-import           TestCodegen
 import           TestEndToEnd
 
 main :: IO ()
-main = mapM_ runTestTT equality
+main = mapM_ runTestTT $ equality ++ compound

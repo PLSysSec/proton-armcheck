@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d38b8813593755c62e5d0df73c6edd3ad76c7152ab1a78c1aaa78a257447cc47
+-- hash: e93e9b3d8877f5507638b4ee992a0ec8ba7826a699d19cfff0055cf26333c1b6
 
 name:           invparse
 version:        0.1.0.0
@@ -59,7 +59,6 @@ test-suite invparse-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      TestCodegen
       TestEndToEnd
       Paths_invparse
   hs-source-dirs:
