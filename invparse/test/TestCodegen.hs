@@ -1,6 +1,7 @@
 module TestCodegen where
 import           AST
 import           Codegen
+import           Control.Monad   (forM_)
 import           Test.HUnit.Base
 
 p    = v 24 24
@@ -17,7 +18,7 @@ num = NoOp . Val
 testEq :: Test
 testEq =
   let eqs = [ p `eq'` zero
-            -- , m `eq'` one
+           , m `eq'` one
             -- , n `eq'` t
             ]
       ex1 = UnaryOp NotBits (BinOp (BinOp (BinOp e ShiftBits (num 24)) AndBits (num 1)) XorBits (num 0))
@@ -29,6 +30,8 @@ testEq =
 testCodegenConstraints :: (Instruction, String) -> [BitTest] -> Test
 testCodegenConstraints instr expected = TestCase $ do
   match <- genConstantMatchInstr instr
-  assertEqual "Unexpected constraints" expected (map constraintTest $ constraints match)
+  assertEqual "Mismatched lengths" (length expected) (length $ constraints match)
+  forM_ (zip expected (map constraintTest $ constraints match)) $ \(e, a) ->
+    assertEqual "Unexpected constraints" e a --expected (map constraintTest $ constraints match)
 
 
