@@ -1,4 +1,4 @@
-module TestEndToEnd where
+module TestEndToEnd (test1) where
 import           AST
 import           Foreign.C
 import           GHC.IO.Exception   (IOErrorType (..), IOException (..))
@@ -43,20 +43,22 @@ testCodegenC c i expected = TestCase $ do
   let instr = (Instruction [c], "test")
   match <- genConstantMatchInstr instr
   let eq = constraints match
-  assertEqual "Bad number of constraints" 0 (length eq)
-  i <- cpp $ unlines [ "int main(int argc, char *argv[]) {"
+  assertEqual "Bad number of constraints" 1 (length eq)
+  i <- cpp $ unlines [ "#include <stdio.h>"
+                     , "#include <stdint.h>"
+                     , "int main(int argc, char *argv[]) {"
                      , "uint32_t instr = " ++ show i ++ ";"
-                     , "uint32_t x =" ++ show eq ++ ";"
+                     , "uint32_t x =" ++ showCompilable (head eq) ++ ";"
                      , "printf(\"%d\", x);"
                      , "}"
                      ]
   assertEqual "Expected equal" (show expected) i
 
 readCommand
-    :: FilePath             -- ^ Filename of the executable (see 'proc' for details)
-    -> [String]             -- ^ any arguments
-    -> String               -- ^ standard input
-    -> IO (ExitCode,String) -- ^ exitcode, stdout+stderr
+    :: FilePath              -- ^ Filename of the executable (see 'proc' for details)
+    -> [String]              -- ^ any arguments
+    -> String                -- ^ standard input
+    -> IO (ExitCode, String) -- ^ code, stdout+stderr
 readCommand proc args input = do
     let cmd = unwords $ proc : (args ++ ["2>&1"])
     mask $ \restore -> do
@@ -66,6 +68,9 @@ readCommand proc args input = do
             terminateProcess pid; waitForProcess pid) $ restore $ do
         -- fork off a thread to start consuming stdout
         out <- hGetContents outh
+        putStrLn "This is the expected result:"
+        print out
+
         waitOut <- forkWait $ C.evaluate $ rnf out
 
         -- now write and flush any input
@@ -99,17 +104,19 @@ forkWait a = do
 
 cpp :: Read a => String -> IO a
 cpp src = do
-  fp <- bracket (mkstemps "/tmp/activeC" ".cpp")
-                (hClose . snd)
-                (\(f,h) -> hPutStr h src >> return (dropExtension f))
+  let fp         = "testfile.cpp"
+      executable = "testfile"
+      cmd        = "./testfile"
+  writeFile fp src
 
   -- compile
-  (ccode,cout) <- readCommand cc ["-o", fp, fp ++ ".cpp"] ""
-  removeFile $ fp ++ ".cpp"
+  (ccode,cout) <- readCommand cc ["-o", executable, fp] ""
   unless (ccode == ExitSuccess) $ fail cout
+
   -- run
-  (code,out) <- readCommand fp [] ""
-  removeFile fp
+  (code,out) <- readCommand cmd [] ""
+  print "But then we error..."
+
   unless (code == ExitSuccess) $ fail out
   readIO out
 

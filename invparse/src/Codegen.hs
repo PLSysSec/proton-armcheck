@@ -67,6 +67,9 @@ data InstrConstraint = BitConstraint { constraintName :: String
 instance Show InstrConstraint where
     show (BitConstraint str test) = unlines ["Test for" ++ str ++ ":", show test]
 
+showCompilable :: InstrConstraint -> String
+showCompilable (BitConstraint _ eq) = show eq
+
 mkConstraint :: BitTest -> InstrConstraint
 mkConstraint = BitConstraint "Debug"
 

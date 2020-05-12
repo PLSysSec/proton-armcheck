@@ -1,6 +1,7 @@
 import           Control.Monad   (mapM_)
 import           Test.HUnit.Text
 import           TestCodegen
+import           TestEndToEnd
 
 main :: IO ()
-main = mapM_ runTestTT [ testEq ]
+main = mapM_ runTestTT [ test1 ]
