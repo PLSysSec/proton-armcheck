@@ -1,7 +1,4 @@
-module TestEndToEnd ( test0
-                    , test1
-                    , test2
-                    ) where
+module TestEndToEnd ( equality ) where
 import           AST
 import           Foreign.C
 import           GHC.IO.Exception   (IOErrorType (..), IOException (..))
@@ -34,15 +31,17 @@ n    = v 19 16
 t    = v 15 12
 m    = v 3 0
 
-test0 :: Test
-test0 = testCodegenC (m `eq'` one) 0 0
-
-test1 :: Test
-test1 = testCodegenC (m `eq'` one) 1 1
-
-test2 :: Test
-test2 = testCodegenC (p `eq'` one) 16777216 1
-
+equality :: [Test]
+equality = [ testCodegenC (m `eq'` one) 0 0
+           , testCodegenC (m `eq'` one) 1 1
+           , testCodegenC (p `eq'` one) 16777216 1
+           , testCodegenC (t `eq'` fifteen) 16777216 0
+           , testCodegenC (m `eq'` (one `add'` one)) 2 1
+           , testCodegenC (t `eq'` fifteen) 61440 1
+           , testCodegenC (n `eq'` t) 765967 1
+           , testCodegenC (t `eq'` m) 61455 1
+           , testCodegenC (t `eq'` m) 61440 0
+           ]
 
 testCodegenC :: Bits -- ^ constraint
              -> Int  -- ^ input

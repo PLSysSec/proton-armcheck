@@ -4,7 +4,4 @@ import           TestCodegen
 import           TestEndToEnd
 
 main :: IO ()
-main = mapM_ runTestTT [ test0
-                       , test1
-                       , test2
-                       ]
+main = mapM_ runTestTT equality
