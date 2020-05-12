@@ -3,7 +3,12 @@ import           AST
 import           Codegen
 import           Test.HUnit.Base
 
-testCodegenConstraints :: (Instruction, String) -> [InstrConstraint] -> IO Test
-testCodegenConstraints instr expected = do
+testEq :: Test
+testEq = undefined
+
+testCodegenConstraints :: (Instruction, String) -> [InstrConstraint] -> Test
+testCodegenConstraints instr expected = TestCase $ do
   match <- genConstantMatchInstr instr
-  return $ expected ~=? constraints match
+  assertEqual "Unexpected constraints" expected (constraints match)
+
+

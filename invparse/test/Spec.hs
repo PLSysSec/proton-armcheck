@@ -1,2 +1,6 @@
+import           Control.Monad   (mapM_)
+import           Test.HUnit.Text
+import           TestCodegen
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = mapM_ runTestTT [ testEq ]
