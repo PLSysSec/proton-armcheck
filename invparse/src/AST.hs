@@ -1,6 +1,7 @@
 {-# LANGUAGE BinaryLiterals #-}
 module AST ( Bits(..)
            , complexConstraints
+           , dname
            , Slice(..)
            , Instruction(..)
            , instr
@@ -128,6 +129,10 @@ isComplex :: Bits -> Bool
 isComplex Global{} = True
 isComplex _        = False
 
+dname :: String -> Bits -> Bits
+dname n (Global _ gc) = Global n gc
+dname _ b             = b
+
 -- | A slice of bits from high to low, INCLUSIVE
 data Slice = Slice { high :: Int
                    , low  :: Int
@@ -192,10 +197,10 @@ data Constraint = Constant Int
                 deriving (Eq, Ord, Show)
 
 c :: Int -> Bits
-c v = Global "" $ Num v
+c v = Global "debug" $ Num v
 
 v :: Int -> Int -> Bits
-v h l = Global "" $ Var $ Slice h l
+v h l = Global "debug" $ Var $ Slice h l
 
 -- | Not equal a constant
 neqc' :: Int -> Int -> Int -> Bits

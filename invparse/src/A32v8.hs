@@ -89,6 +89,7 @@ ldrlit = [ not 31 28 0b1111
          , constant 20 16 0b11111
          , reg 15 12
          , any 11 0 -- imm12. what do we do here
+         -- restrictions
          , (p `eq'` zero) `or'` (w `eq'` one)
          ]
 
@@ -104,8 +105,9 @@ ldrreg = [ not 31 28 0b1111
          , any 6 5 -- stype
          , constant 4 4 0
          , reg 3 0
-         , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` c 15)
-         , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+         -- restrictions
+         , dname "fifteen" $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` c 15)
+         , dname "nt" $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
          ]
 
 ldrbimm = [ not 31 28 0b1111
@@ -132,6 +134,7 @@ ldrblit = [ not 31 28 0b1111
           , reg 15 12
 --          , not 15 12 15
           , any 11 0 -- imm12. what do we do here
+          -- restrictions
           , (p `eq'` zero) `or'` (w `eq'` one)
           ]
 
@@ -147,8 +150,9 @@ ldrbreg = [ not 31 28 0b1111
           , any 6 5 -- stype
           , constant 4 4 0
           , reg 3 0
-          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` c 15)
-          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+          -- restrictions
+          , dname "fifteen" $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` c 15)
+          , dname "nt" $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
           ]
 
 ldrdimm = [ not 31 28 0b1111
@@ -165,9 +169,10 @@ ldrdimm = [ not 31 28 0b1111
           , any 3 0 -- imm4L
             -- restrictions
 --          , not 15 12 0
-          , (p `eq'` zero) `and'` (w `eq'` one)
-          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` ((n `eq'` t) `or'` (n `eq'` (t `add'` one)))
-          , (t `add'` one) `eq'` fifteen
+          , dname "pw" $ (p `eq'` zero) `and'` (w `eq'` one)
+          , dname "nt" $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+          , dname "nt1" $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` (t `add'` one))
+          , dname "fifteen" $ (t `add'` one) `eq'` fifteen
           ]
 
 ldrdlit = [ not 31 28 0b1111
@@ -199,14 +204,14 @@ ldrdreg = [ not 31 28 0b1111
           , reg 3 0
           -- restrictions
 --          , not 12 12 1 -- not Rt<0> == 1
-          , (p `eq'` zero) `and'` (w `eq'` one)
-          , m `eq'` fifteen
-          , t `eq'` (c 14)
-          , m `eq'` t
-          , m `eq'` (t `add'` one)
-          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` c 15)
-          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
-          , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` (t `add'` one))
+          , dname "pw" $ (p `eq'` zero) `and'` (w `eq'` one)
+          , dname "fifteen" $ m `eq'` fifteen
+          , dname "fourteen" $ t `eq'` (c 14)
+          , dname "mt" $ m `eq'` t
+          , dname "mt1" $ m `eq'` (t `add'` one)
+          , dname "n15" $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` c 15)
+          , dname "nt" $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+          , dname "nt1" $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` (t `add'` one))
           ]
 
 ldrhimm = [ not 31 28 0b1111
