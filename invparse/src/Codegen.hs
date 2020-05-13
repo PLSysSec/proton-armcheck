@@ -23,7 +23,7 @@ data InstrMatch = InstrMatch { iname       :: String
 
 instance Show InstrMatch where
   show (InstrMatch name str constrs) =
-    unlines [name ++ ":", str] ++ unlines (map show constrs)
+    unlines $ (name ++ " " ++ str) : map show constrs
 
 type BitStr = String
 
@@ -85,7 +85,7 @@ data InstrConstraint = BitConstraint { constraintName :: String
 
 
 instance Show InstrConstraint where
-    show (BitConstraint str test) = unlines ["Test for " ++ str ++ ":", show test]
+    show (BitConstraint str test) = str ++ " " ++ show test
 
 showCompilable :: InstrConstraint -> String
 showCompilable (BitConstraint _ eq) = show eq
