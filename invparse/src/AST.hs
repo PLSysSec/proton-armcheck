@@ -5,11 +5,6 @@ module AST ( Bits(..)
            , Slice(..)
            , Instruction(..)
            , instr
-           -- * Instruction building helpers
-           , threeArgInstr -- Three argument instruction
-           , threeArgSr    -- Three argument shifted register instruction
-           , twoArgEx      -- Two argument extended instruction
-           , twoArgImm     -- Two argument immediate instruction
            -- * Helpers that constrain bits within an instruction
            , anyReg        -- Bits can represent any register
            , anyRegOrSp    -- Bits can represent any register or the stack pointer
@@ -57,58 +52,6 @@ instr bits = Instruction $ checkBits 32 bits []
       Global {} -> checkBits lastSlice rest (bits:instrs)
       Bits bs _ | lastSlice <= high bs -> error "Disallowed instr construction"
       Bits bs _ -> checkBits (low bs) rest (bits:instrs)
-
----
---- Some helpers for standard kinds of instructions
----
-
-threeArgInstr :: Int -> Instruction
-threeArgInstr op = instr [ constant 31 21 op
-                         , anyReg 20 16
-                         , zeroed 15 10
-                         , anyReg 9 5
-                         , anyReg 4 0
-                         ]
-
-twoArgImm :: Int
-          -> Bits -- ^ Register 1
-          -> Bits -- ^ Register 2
-          -> Instruction
-twoArgImm op r1 r2 = instr [ constant 31 23 op
-                           , any 22 22
-                           , range 21 10 0 4095
-                           , r1
-                           , r2
-                           ]
-
-twoArgEx :: Int
-         -> Bits -- ^ Register 1
-         -> Bits -- ^ Register 2
-         -> Instruction
-twoArgEx op r1 r2 = instr [ constant 31 21 op
-                          , undef 20 16
-                          , any 15 13
-                          , range 12 10 0 4
-                          , r1
-                          , r2
-                          ]
-
-threeArgSr :: Int
-           -> Bits -- ^ Register 1
-           -> Bits -- ^ Register 2
-           -> Bits -- ^ Register 3
-           -> Instruction
-threeArgSr op r1 r2 r3 = instr [ constant 31 24 op
-                               , choice 23 22 [ 00
-                                              , 01
-                                              , 10
-                                              ]
-                               , constant 21 21 0
-                               , r1
-                               , range 15 10 0 63
-                               , r2
-                               , r3
-                               ]
 
 ---
 --- Constraints on individual slices of bits
