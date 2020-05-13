@@ -6,11 +6,54 @@ from cffi import FFI
 from collections import deque
 from random import choice, getrandbits
 
+# info about instructions
+class Instrs(object):
+    instrs = []
+    names = {}
+    tests = {}
+    tnames = []
+
+    # read in instructions file
+    @classmethod
+    def from_file(cls, infile):
+        with open(infile, 'r') as f:
+            ni = [ l.strip().split(' ', 1) for l in f.readlines() ]
+
+        cls.instrs.clear()
+        cls.names.clear()
+        cls.tests.clear()
+        cls.tnames.clear()
+        tnames = set()
+
+        # parse instructions
+        in_instr = False
+        current_instr = None
+        for n in ni:
+            if n == ['']:
+                in_instr = False
+                continue
+
+            if not in_instr:
+                current_instr = n[1]
+                cls.instrs.append(current_instr)
+                cls.names[current_instr] = n[0]
+                cls.tests[current_instr] = []
+                in_instr = True
+            else:
+                cls.tests[current_instr].append(n)
+                tnames.add(n[0])
+
+        # turn tnames into pointers into the tname list
+        cls.tnames.append("OK");
+        cls.tnames.extend(tnames)
+        for tt in cls.tests:
+            for t in cls.tests[tt]:
+                idx = cls.tnames.index(t[0])
+                t[0] = idx
+
 # decision tree node / leaf object
 class TreeNode(object):
-    names = {}
     values = []
-    instrs = []
     posn = None
     left = None
     right = None
@@ -29,7 +72,7 @@ class TreeNode(object):
             offset = 2
 
         if self.is_leaf():
-            print(" ", [ TreeNode.names[v] for v in self.values ], sep='')
+            print(" ", [ Instrs.names[v] for v in self.values ], sep='')
             return
         print()
 
@@ -54,13 +97,16 @@ class TreeNode(object):
 
     def _to_code(self, indent=0):
         indent_str = " " * indent
+        ostr = ""
         posns = set()
         if self.is_leaf():
-            #return (indent_str + "printf(\"%s\\n\");\n" % str(self.values), posns)
             assert len(self.values) == 1
-            return (indent_str + "return %d;\n" % self.instrs.index(self.values[0]), posns)
+            idx = 1 + Instrs.instrs.index(self.values[0])
+            for t in Instrs.tests[self.values[0]]:
+                ostr += indent_str + "if ((%s) != 0) { return (%d << 6) | %d; }\n" % (t[1], t[0], idx)
+            ostr += indent_str + "return %d;\n" % idx
+            return (ostr, posns)
 
-        ostr = ""
         posns.add(self.posn)
         #ostr += indent_str + "int test_bit = (instr & (1 << %d)) == 1;\n" % self.posn
         ostr += indent_str + "if (instr_bit_%d == 0) {\n" % self.posn
@@ -81,35 +127,21 @@ class TreeNode(object):
         ostr += indent_str + "}\n"
         return (ostr, posns)
 
-# read in instructions file
-def read_instrs(infile):
-    with open(infile, 'r') as f:
-        ni = [ l.strip().split() for l in f.readlines() ]
-    ret = []
-    TreeNode.names.clear()
-    for (n, i) in ni:
-        TreeNode.names[i] = n
-        ret.append(i)
-    TreeNode.instrs = ret
-    return ret
-
 # how many different values are there across all instructions at a given position?
-def num_opts(instrs, posn):
+def num_opts(posn):
     vals = {}
-    for instr in instrs:
+    for instr in Instrs.instrs:
         vals[instr[posn]] = 1 + vals.get(instr[posn], 0)
     return list(vals.keys())
 
 # return a list of all of the positions we have to consider in decision tree
-def get_posns(instrs):
-    # walrus operator!!!
-    #return [ (p, n) for p in range(0, len(instrs[0])) if (n := num_opts(instrs, p)) > 1 ]
+def get_posns():
     nx1 = []
     nx2 = []
     x2 = []
     x3 = []
-    for p in range(0, len(instrs[0])):
-        opts = num_opts(instrs, p)
+    for p in range(0, len(Instrs.instrs[0])):
+        opts = num_opts(p)
         if len(opts) == 1 and opts[0] == 'x':
             # ignore bits that are always dont-care
             continue
@@ -203,12 +235,12 @@ def cleanup_1111(root):
         if sibling.values[0] in node.values:
             node.values.remove(sibling.values[0])
 
-def make_decision_tree(instrs):
-    posns = get_posns(instrs)
+def make_decision_tree():
+    posns = get_posns()
 
     # root of tree
     root = TreeNode()
-    root.values = list(instrs)
+    root.values = list(Instrs.instrs)
 
     # work queue
     wnext = deque()
@@ -279,8 +311,8 @@ def fix_instr(template, instr):
 
 def test(instr_file):
     # read in file and generate decision tree
-    instrs = read_instrs(instr_file)
-    root = make_decision_tree(instrs)
+    Instrs.from_file(instr_file)
+    root = make_decision_tree()
 
     # build the resulting code
     cstr = "int check_instr(uint32_t instr) {\n" + root.to_code(indent=2) + "  return 0;\n}\n"
@@ -292,21 +324,21 @@ def test(instr_file):
 
     # first, test random values that match known instructions
     for _ in range(0, 8192):
-        target_instr = choice(instrs)
+        target_instr = choice(Instrs.instrs)
         instr = fix_instr(target_instr, getrandbits(32))
         ret = lib.check_instr(instr)
-        if ret != TreeNode.instrs.index(target_instr):
-            print(TreeNode.names[target_instr], to_bits(instr))
+        if ret != Instrs.instrs.index(target_instr):
+            print(Instrs.names[target_instr], to_bits(instr))
 
     # next, generate random instructions, match them manually, then make sure the tree agrees
     for _ in range(0, 8192):
         instr = getrandbits(32)
-        matches = [ tmpl for tmpl in instrs if match_instr(tmpl, instr) ]
+        matches = [ tmpl for tmpl in Instrs.instrs if match_instr(tmpl, instr) ]
         ret = lib.check_instr(instr)
         if not matches:
             assert ret == -1
         if matches:
-            assert TreeNode.instrs[ret] in matches
+            assert Instrs.instrs[ret] in matches
 
 if __name__ == "__main__":
     test("instrs")
