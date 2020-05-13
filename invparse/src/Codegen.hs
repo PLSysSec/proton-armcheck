@@ -36,6 +36,26 @@ genConstantMatchInstr (inst, name) = do
     return (str, genned)
   return $ InstrMatch name bitstring $ map mkConstraint test
 
+genInstrMatches :: [Bits] -> String -> IO String
+genInstrMatches [] str = return str
+genInstrMatches (b:bs) str =
+  case b of
+    Global {} -> genInstrMatches bs str
+    Bits bs c -> do
+      let len = high bs - low bs + 1
+      newStr <- case c of
+        Constant v -> do
+          let str       = showIntAtBase 2 intToDigit v ""
+          when (length str > len) $ error $ unwords [ "Overly long string:"
+                                                    , str
+                                                    , ". Expected"
+                                                    , show bs
+                                                    ]
+          return $ replicate (len - length str) '0' ++ str
+        _          -> return $ replicate len 'x'
+      let padLen = 31 - len - length str
+      return $ replicate padLen 'x' ++ newStr
+
 genInstrMatch :: Bits -> IO (Maybe BitStr)
 genInstrMatch bits =
   case bits of
