@@ -5,7 +5,6 @@ import           Control.Monad (forM, when)
 import           Control.Monad (unless)
 import           Data.Bits     hiding (Bits)
 import           Data.Char     (intToDigit)
-import           Data.IORef
 import           Data.List     (intercalate)
 import           Data.Maybe    (catMaybes)
 import           Debug.Trace
@@ -32,7 +31,6 @@ genConstantMatchInstr :: (Instruction, String) -> IO InstrMatch
 genConstantMatchInstr (inst, name) = do
   bstr <- mapM genInstrMatch $ reverse $ allBits inst
   let bitstring = concat $ catMaybes bstr
-  ref <- newIORef 0
   test <- forM (complexConstraints inst) $ \(gc, str) -> do
     genned <- genBitTest gc
     return (str, genned)
