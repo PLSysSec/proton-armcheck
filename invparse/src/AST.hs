@@ -42,8 +42,9 @@ import           Prelude hiding (any, not)
 data Instruction = Instruction { allBits :: [Bits] }
                  deriving (Eq, Ord, Show)
 
-complexConstraints :: Instruction -> [GlobalConstraint]
-complexConstraints inst = map globConstraint $ filter isComplex $ allBits inst
+complexConstraints :: Instruction -> [(GlobalConstraint, String)]
+complexConstraints inst =
+  map (\i -> (globConstraint i, debugName i)) $ filter isComplex $ allBits inst
 
 -- | Make a new instruction
 instr :: [Bits] -> Instruction
@@ -118,8 +119,10 @@ threeArgSr op r1 r2 r3 = instr [ constant 31 24 op
 data Bits = Bits { bits       :: Slice          -- constrain contiguous bits
                  , constraint :: Constraint
                  }
-          | Global { globConstraint :: GlobalConstraint } -- constrain global properties
-       deriving (Eq, Ord, Show)
+          | Global { debugName      :: String
+                   , globConstraint :: GlobalConstraint
+                   } -- constrain global properties
+            deriving (Eq, Ord, Show)
 
 isComplex :: Bits -> Bool
 isComplex Global{} = True
@@ -189,10 +192,10 @@ data Constraint = Constant Int
                 deriving (Eq, Ord, Show)
 
 c :: Int -> Bits
-c v = Global $ Num v
+c v = Global "" $ Num v
 
 v :: Int -> Int -> Bits
-v h l = Global $ Var $ Slice h l
+v h l = Global "" $ Var $ Slice h l
 
 -- | Not equal a constant
 neqc' :: Int -> Int -> Int -> Bits
@@ -203,28 +206,28 @@ eqc' :: Int -> Int -> Int -> Bits
 eqc' hi lo val = (v hi lo) `eq'` (c val)
 
 and' :: Bits -> Bits -> Bits
-and' (Global c1) (Global c2) = Global $ And c1 c2
+and' (Global n c1) (Global _ c2) = Global n $ And c1 c2
 and' _ _                     = error "Expected global constraint argument to and"
 
 or' :: Bits -> Bits -> Bits
-or' (Global c1) (Global c2) = Global $ Or c1 c2
+or' (Global n c1) (Global _ c2) = Global n $ Or c1 c2
 or' _ _                     = error "Expected global constraint argument to or"
 
 -- | enforce well-formed-ness
 neq' :: Bits -> Bits -> Bits
-neq' (Global c1) (Global c2) = Global $ Neq c1 c2
+neq' (Global n c1) (Global _ c2) = Global n $ Neq c1 c2
 neq' _ _                     = error "Expected global constraint argument to eq"
 
 eq' :: Bits -> Bits -> Bits
-eq' (Global c1) (Global c2) = Global $ Eq c1 c2
-eq' _ _                     = error "Expected global constraint argument to eq"
+eq' (Global n c1) (Global _ c2) = Global n $ Eq c1 c2
+eq' _ _                         = error "Expected global constraint argument to eq"
 
 -- | Logical not (not bitwise not)
 not' :: Bits -> Bits
-not' (Global c) = Global $ LogicalNot c
+not' (Global n c) = Global n $ LogicalNot c
 
 add' :: Bits -> Bits -> Bits
-add' (Global c1) (Global c2) = Global $ Add c1 c2
+add' (Global n c1) (Global _ c2) = Global n $ Add c1 c2
 add' _ _ = error "Expected global constraint argument to add"
 
 data GlobalConstraint = Num { val :: Int }

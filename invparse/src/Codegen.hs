@@ -1,7 +1,7 @@
 {-# LANGUAGE BinaryLiterals #-}
 module Codegen where
 import           AST
-import           Control.Monad (when)
+import           Control.Monad (forM, when)
 import           Control.Monad (unless)
 import           Data.Bits     hiding (Bits)
 import           Data.Char     (intToDigit)
@@ -33,7 +33,9 @@ genConstantMatchInstr (inst, name) = do
   bstr <- mapM genInstrMatch $ reverse $ allBits inst
   let bitstring = concat $ catMaybes bstr
   ref <- newIORef 0
-  test <- mapM genBitTest $ complexConstraints inst
+  test <- forM (complexConstraints inst) $ \(gc, str) -> do
+    genned <- genBitTest gc
+    return (str, genned)
   return $ InstrMatch name bitstring $ map mkConstraint test
 
 genInstrMatch :: Bits -> IO (Maybe BitStr)
@@ -70,8 +72,8 @@ instance Show InstrConstraint where
 showCompilable :: InstrConstraint -> String
 showCompilable (BitConstraint _ eq) = show eq
 
-mkConstraint :: BitTest -> InstrConstraint
-mkConstraint = BitConstraint "Debug"
+mkConstraint :: (String, BitTest) -> InstrConstraint
+mkConstraint (s, b) = BitConstraint s b
 
 -- | A test can either be a top-level comparison against 1,
 -- or an assingment to a temporary variable
