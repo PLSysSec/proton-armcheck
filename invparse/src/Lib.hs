@@ -16,7 +16,7 @@ someFunc = do
     instrMatch <- genConstantMatchInstr is
     let str = bitstring instrMatch
     print instrMatch
-    unless (length str == 32) $ error $ unwords [ "Bad bitstring"
+    unless (length str == 32) $ error $ unwords [ "Non-32 bit bitstring"
                                                 , snd is
                                                 , ":"
                                                 , str

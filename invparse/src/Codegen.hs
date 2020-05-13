@@ -29,18 +29,17 @@ type BitStr = String
 
 genConstantMatchInstr :: (Instruction, String) -> IO InstrMatch
 genConstantMatchInstr (inst, name) = do
-  bstr <- mapM genInstrMatch $ reverse $ allBits inst
-  let bitstring = concat $ catMaybes bstr
+  bitstring <- genInstrMatches "" $ reverse $ allBits inst
   test <- forM (complexConstraints inst) $ \(gc, str) -> do
     genned <- genBitTest gc
     return (str, genned)
   return $ InstrMatch name bitstring $ map mkConstraint test
 
-genInstrMatches :: [Bits] -> String -> IO String
-genInstrMatches [] str = return str
-genInstrMatches (b:bs) str =
+genInstrMatches :: String -> [Bits] -> IO String
+genInstrMatches str [] = return str
+genInstrMatches str (b:xs) =
   case b of
-    Global {} -> genInstrMatches bs str
+    Global {} -> genInstrMatches str xs
     Bits bs c -> do
       let len = high bs - low bs + 1
       newStr <- case c of
@@ -53,25 +52,8 @@ genInstrMatches (b:bs) str =
                                                     ]
           return $ replicate (len - length str) '0' ++ str
         _          -> return $ replicate len 'x'
-      let padLen = 31 - len - length str
-      return $ replicate padLen 'x' ++ newStr
-
-genInstrMatch :: Bits -> IO (Maybe BitStr)
-genInstrMatch bits =
-  case bits of
-    Global {} -> return Nothing
-    Bits bs c -> do
-      let len  = high bs - low bs + 1
-      case c of
-        Constant v -> do
-          let str       = showIntAtBase 2 intToDigit v ""
-          when (length str > len) $ error $ unwords [ "Overly long string:"
-                                                    , str
-                                                    , ". Expected"
-                                                    , show bs
-                                                    ]
-          return $ Just $ replicate (len - length str) '0' ++ str
-        _          -> return $ Just $ replicate len 'x'
+      let padLen = 31 - length str - high bs
+      genInstrMatches (str ++ replicate padLen 'x' ++ newStr) xs
 
 ---
 --- Generating invariant tests for a given instruction
