@@ -5,6 +5,7 @@
 from cffi import FFI
 from collections import deque
 from random import choice, getrandbits
+import sys
 
 # info about instructions
 class Instrs(object):
@@ -65,6 +66,8 @@ class Instrs(object):
             for t in tests[tt]:
                 tidx = cls.tnames.index(t[0])
                 fstr += "  if ((%s) != 0) { return (%d << 16) | %d; }\n" % (t[1], tidx, iidx)
+            if not tests[tt]:
+                fstr += "  (void)instr;\n"
             fstr += "  return %d;\n}\n" % iidx
 
         cls.tests = tstr + istr + fstr
@@ -325,16 +328,17 @@ def fix_instr(template, instr):
     assert match_instr(template, instr)
     return instr
 
-def make_code(instr_file):
+def make_code(instr_file, static=False):
     # read in file and generate decision tree
     Instrs.from_file(instr_file)
     root = make_decision_tree()
-    proto = "uint32_t check_instr(uint32_t instr)"
+    static_str = "static " if static else ""
+    proto = "%suint32_t check_instr(uint32_t instr)" % static_str
     cstr = ("%s {\n" % proto) + root.to_code(indent=2) + "  return DEAD_END;\n}\n"
     return ("%s;" % proto, Instrs.tests + cstr)
 
 def test(instr_file):
-    (proto, code) = make_code(instr_file)
+    (proto, code) = make_code(instr_file, static=False)
 
     # build the resulting code
     ffibuilder = FFI()
@@ -365,4 +369,23 @@ def test(instr_file):
                 print(ret >> 16)
 
 if __name__ == "__main__":
-    test("instrs")
+    if len(sys.argv) > 1:
+        test("instrs")
+
+    else:
+        (proto, code) = make_code("instrs", static=True)
+        print("#include <stddef.h>\n#include <stdint.h>\n")
+        print(proto)
+        print("uint32_t check_buffer(uint32_t *buf, size_t len);\n")
+        print(code)
+        print("""
+uint32_t check_buffer(uint32_t *buf, size_t len) {
+  for (size_t idx = 0; idx < len; ++idx) {
+    uint32_t ret = check_instr(buf[idx]);
+    if ((ret >> 16) != 0) {
+      return ret;
+    }
+  }
+  return 0;
+}
+""")
