@@ -383,11 +383,11 @@ if __name__ == "__main__":
         print("uint32_t check_buffer(uint32_t *buf, size_t len);\n")
         print(code)
         print("""
-uint32_t check_buffer(uint32_t *buf, size_t len) {
+uint64_t check_buffer(uint32_t *buf, size_t len) {
   for (size_t idx = 0; idx < len; ++idx) {
     uint32_t ret = check_instr(buf[idx]);
     if ((ret >> 16) != 0) {
-      return ret;
+      return ((uint64_t) ret) | (((uint64_t) idx) << 32)
     }
   }
   return 0;
