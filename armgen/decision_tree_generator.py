@@ -2,13 +2,13 @@
 #
 # generate an optimized? decision tree given a list of instructions
 
-from cffi import FFI
 from collections import deque
 from random import choice, getrandbits
 import sys
 
 # info about instructions
 class Instrs(object):
+    dummy = None
     instrs = []
     names = {}
     tnames = []
@@ -35,11 +35,14 @@ class Instrs(object):
                 continue
 
             if not in_instr:
-                current_instr = n[1]
-                cls.instrs.append(current_instr)
-                cls.names[current_instr] = n[0]
-                tests[current_instr] = []
-                in_instr = True
+                (current_name, current_instr) = n
+                if current_name == "dummy":
+                    cls.dummy = current_instr
+                else:
+                    cls.instrs.append(current_instr)
+                    cls.names[current_instr] = current_name
+                    tests[current_instr] = []
+                    in_instr = True
             else:
                 tests[current_instr].append(n)
                 tnames.add(n[0])
@@ -341,6 +344,7 @@ def test(instr_file):
     (proto, code) = make_code(instr_file, static=False)
 
     # build the resulting code
+    from cffi import FFI
     ffibuilder = FFI()
     ffibuilder.cdef(proto)
     ffibuilder.set_source("_ckinstr", code)
