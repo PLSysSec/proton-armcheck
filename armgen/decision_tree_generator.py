@@ -75,6 +75,15 @@ class Instrs(object):
 
         cls.tests = tstr + istr + fstr
 
+    # generate early return for dummy instr
+    @classmethod
+    def dummy_code(cls, indent=2):
+        if cls.dummy is None:
+            return ""
+        dmask = int(''.join( '0' if c == 'x' else '1' for c in cls.dummy ), 2)
+        dpatt = int(''.join( '0' if c == 'x' else c for c in cls.dummy ), 2)
+        return (' ' * indent) + "if ((instr & 0x%x) == 0x%x) { return DEAD_END; }\n" % (dmask, dpatt)
+
 # decision tree node / leaf object
 class TreeNode(object):
     values = []
@@ -113,7 +122,7 @@ class TreeNode(object):
     def to_code(self, indent=0):
         (ostr, posns) = self._to_code(indent)
         indent_str = " " * indent
-        pstr = indent_str + "int DEAD_END = 0;\n"
+        pstr = indent_str + "int DEAD_END = 0;\n" + Instrs.dummy_code(indent)
         for p in posns:
             px = 31 - p
             pstr += indent_str + "int instr_bit_%d = (instr & (1 << %d)) != 0;\n" % (p, px)
