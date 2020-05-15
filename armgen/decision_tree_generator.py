@@ -310,7 +310,8 @@ def make_decision_tree():
             node.values = []
 
     cleanup_dead_ends(root)
-    cleanup_1111(root)
+    if Instrs.dummy is not None:
+        cleanup_1111(root)
     return root
 
 def to_bits(instr):
@@ -390,8 +391,12 @@ def test(instr_file):
 
     # next, generate random instructions, match them manually, then make sure the tree agrees
     for _ in range(0, 8192):
-        # leftmost bit is 0, guaranteeing that we don't get something rejected by dummy filter
-        instr = getrandbits(31)
+        if Instrs.dummy is not None:
+            # leftmost bit is 0, guaranteeing that we don't get something rejected by dummy filter
+            # XXX this is a hard-coded hack
+            instr = getrandbits(31)
+        else:
+            instr = getrandbits(32)
         matches = [ tmpl for tmpl in Instrs.instrs if match_instr(tmpl, instr) ]
         ret = lib.check_instr(instr)
         if not matches:

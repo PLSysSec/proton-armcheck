@@ -1,0 +1,145 @@
+ldppre32 0010100011xxxxxxxxxxxxxxxxxxxxxx
+t2 (( (( (( instr ) >> ( 10 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 5 )) ) & ( 31 )) ))
+t (( (( (( instr ) >> ( 0 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 5 )) ) & ( 31 )) ))
+
+ldppost32 0010100111xxxxxxxxxxxxxxxxxxxxxx
+t2 (( (( (( instr ) >> ( 10 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 5 )) ) & ( 31 )) ))
+t (( (( (( instr ) >> ( 0 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 5 )) ) & ( 31 )) ))
+
+ldppre64 1010100011xxxxxxxxxxxxxxxxxxxxxx
+t2 (( (( (( instr ) >> ( 10 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 5 )) ) & ( 31 )) ))
+t (( (( (( instr ) >> ( 0 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 5 )) ) & ( 31 )) ))
+
+ldppost64 1010100111xxxxxxxxxxxxxxxxxxxxxx
+t2 (( (( (( instr ) >> ( 10 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 5 )) ) & ( 31 )) ))
+t (( (( (( instr ) >> ( 0 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 5 )) ) & ( 31 )) ))
+
+ldrpost32 10111000010xxxxxxxxx01xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+ldrpost64 11111000010xxxxxxxxx01xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+ldrpre32 10111000010xxxxxxxxx11xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+ldrpre64 11111000010xxxxxxxxx11xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+ldrbpost 00111000010xxxxxxxxx01xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+ldrbpre 00111000010xxxxxxxxx11xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+ldrhpost 01111000010xxxxxxxxx01xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+ldrhpre 01111000010xxxxxxxxx11xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+ldrsbpost32 00111000110xxxxxxxxx01xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+ldrsbpost64 00111000100xxxxxxxxx01xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+ldrsbpre32 00111000110xxxxxxxxx11xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+ldrsbpre64 00111000100xxxxxxxxx11xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+ldrshpost32 01111000110xxxxxxxxx01xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+ldrshpost64 01111000100xxxxxxxxx01xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+ldrshpre32 01111000110xxxxxxxxx11xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+ldrshpre64 01111000100xxxxxxxxx11xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+ldrswpost 10111000100xxxxxxxxx01xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+ldrswpre 10111000100xxxxxxxxx11xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+strpost32 10111000000xxxxxxxxx01xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+strpost64 11111000000xxxxxxxxx01xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+strpre32 10111000000xxxxxxxxx11xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+strpre64 11111000000xxxxxxxxx11xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+strpost 00111000000xxxxxxxxx01xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+strpre 00111000000xxxxxxxxx11xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+strhpost 01111000000xxxxxxxxx01xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+strhpre 01111000000xxxxxxxxx11xxxxxxxxxx
+debug (( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) != ( 31 )) ))
+
+stxr32 10001000000xxxxx0xxxxxxxxxxxxxxx
+sn (( (( (( (( instr ) >> ( 16 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 5 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( 31 )) ))
+s (( (( (( instr ) >> ( 16 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) ))
+
+stxr64 11001000000xxxxx0xxxxxxxxxxxxxxx
+sn (( (( (( (( instr ) >> ( 16 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 5 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( 31 )) ))
+s (( (( (( instr ) >> ( 16 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) ))
+
+stxrh 01001000000xxxxx0xxxxxxxxxxxxxxx
+sn (( (( (( (( instr ) >> ( 16 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 5 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( 31 )) ))
+s (( (( (( instr ) >> ( 16 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) ))
+
+stxrb 00001000000xxxxx0xxxxxxxxxxxxxxx
+sn (( (( (( (( instr ) >> ( 16 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 5 )) ) & ( 31 )) )) ) & ( (( (( (( instr ) >> ( 5 )) ) & ( 31 )) ) == ( 31 )) ))
+s (( (( (( instr ) >> ( 16 )) ) & ( 31 )) ) == ( (( (( instr ) >> ( 0 )) ) & ( 31 )) ))
+
+ldrreg32 10111000011xxxxxxxxx10xxxxxxxxxx
+debug (( (( (( instr ) >> ( 14 )) ) & ( 1 )) ) == ( 0 ))
+
+ldrreg64 11111000011xxxxxxxxx10xxxxxxxxxx
+debug (( (( (( instr ) >> ( 14 )) ) & ( 1 )) ) == ( 0 ))
+
+ldrbreg 00111000011xxxxxxxxx10xxxxxxxxxx
+debug (( (( (( instr ) >> ( 14 )) ) & ( 1 )) ) == ( 0 ))
+
+ldrhreg 01111000011xxxxxxxxx10xxxxxxxxxx
+debug (( (( (( instr ) >> ( 14 )) ) & ( 1 )) ) == ( 0 ))
+
+ldrsb 001110001x1xxxxxxxxx10xxxxxxxxxx
+debug (( (( (( instr ) >> ( 14 )) ) & ( 1 )) ) == ( 0 ))
+
+ldrshreg32 01111000111xxxxxxxxx10xxxxxxxxxx
+debug (( (( (( instr ) >> ( 14 )) ) & ( 1 )) ) == ( 0 ))
+
+ldrshreg64 01111000101xxxxxxxxx10xxxxxxxxxx
+debug (( (( (( instr ) >> ( 14 )) ) & ( 1 )) ) == ( 0 ))
+
+ldrswreg 10111000101xxxxxxxxx10xxxxxxxxxx
+debug (( (( (( instr ) >> ( 14 )) ) & ( 1 )) ) == ( 0 ))
+
+strreg32 10111000001xxxxxxxxx10xxxxxxxxxx
+debug (( (( (( instr ) >> ( 14 )) ) & ( 1 )) ) == ( 0 ))
+
+strreg64 11111000001xxxxxxxxx10xxxxxxxxxx
+debug (( (( (( instr ) >> ( 14 )) ) & ( 1 )) ) == ( 0 ))
+
+strbreg 00111000001xxxxxxxxx10xxxxxxxxxx
+debug (( (( (( instr ) >> ( 14 )) ) & ( 1 )) ) == ( 0 ))
+
+strhreg 01111000001xxxxxxxxx10xxxxxxxxxx
+debug (( (( (( instr ) >> ( 14 )) ) & ( 1 )) ) == ( 0 ))
