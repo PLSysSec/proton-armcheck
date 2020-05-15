@@ -68,6 +68,7 @@ rt0 = v 12 12
 
 dummy = [ constant 31 28 0b1111
         , any 27 0
+        , (p `eq'` zero) `and'` (w `eq'` one)
         ]
 
 ldrimm = [ not 31 28 0b1111
@@ -80,7 +81,7 @@ ldrimm = [ not 31 28 0b1111
          , reg 15 12
          , any 11 0
          -- restrictions
-         , not' $ ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
+         , ((p `eq'` zero) `or'` (w `eq'` one)) `and'` (n `eq'` t)
          ]
 
 ldrlit = [ not 31 28 0b1111

@@ -24,6 +24,7 @@ module AST ( Bits(..)
            , and'
            , or'
            , eq'
+           , neq'
            , not'
            , add'
            , Constraint(..)
