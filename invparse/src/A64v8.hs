@@ -4,11 +4,59 @@ import           AST
 
 -- Section C6.2
 
--- Instructions with notable unpredictable behavior:
+a64v8instrs :: [(Instruction, String)]
+a64v8instrs = map (\i -> (instr $ fst i, snd i)) [ (ldppre32, "ldppre32")
+                                                 , (ldppost32, "ldppost32")
+                                                 , (ldppre64, "ldppre64")
+                                                 , (ldppost64, "ldppost64")
+                                                 , (ldrpost32, "ldrpost32")
+                                                 , (ldrpost64, "ldrpost64")
+                                                 , (ldrpre32, "ldrpre32")
+                                                 , (ldrpre64, "ldrpre64")
+                                                 , (ldrbpost, "ldrbpost")
+                                                 , (ldrbpre, "ldrbpre")
+                                                 , (ldrhpost, "ldrhpost")
+                                                 , (ldrhpre, "ldrhpre")
+                                                 , (ldrsbpost32, "ldrsbpost32")
+                                                 , (ldrsbpost64, "ldrsbpost64")
+                                                 , (ldrsbpre32, "ldrsbpre32")
+                                                 , (ldrsbpre64, "ldrsbpre64")
+                                                 , (ldrshpost32, "ldrshpost32")
+                                                 , (ldrshpost64, "ldrshpost64")
+                                                 , (ldrshpre32, "ldrshpre32")
+                                                 , (ldrshpre64, "ldrshpre64")
+                                                 , (ldrswpost, "ldrswpost")
+                                                 , (ldrswpre, "ldrswpre")
+                                                 , (strpost32, "strpost32")
+                                                 , (strpost64, "strpost64")
+                                                 , (strpre32, "strpre32")
+                                                 , (strpre64, "strpre64")
+                                                 , (strpost, "strpost")
+                                                 , (strpre, "strpre")
+                                                 , (strhpost, "strhpost")
+                                                 , (strhpre, "strhpre")
+                                                 , (stxr32, "stxr32")
+                                                 , (stxr64, "stxr64")
+                                                 , (stxrh, "stxrh")
+                                                 , (stxrb, "stxrb")
+                                                 , (ldrreg32, "ldrreg32")
+                                                 , (ldrreg64, "ldrreg64")
+                                                 , (ldrbreg, "ldrbreg")
+                                                 , (ldrhreg, "ldrhreg")
+                                                 , (ldrsb, "ldrsb")
+                                                 , (ldrshreg32, "ldrshreg32")
+                                                 , (ldrshreg64, "ldrshreg64")
+                                                 , (ldrswreg, "ldrswreg")
+                                                 , (strreg32, "strreg32")
+                                                 , (strreg64, "strreg64")
+                                                 , (strbreg, "strbreg")
+                                                 , (strhreg, "strhreg")
+                                                 ]
 
-t = v 4 0
-n = v 9 5
-t2 = v 14 10
+
+t   = v 4 0
+n   = v 9 5
+t2  = v 14 10
 _31 = c 31
 
 -- ldp
