@@ -5,7 +5,7 @@ import           AST
 -- Section C6.2
 
 a64v8instrs :: [(Instruction, String)]
-a64v8instrs = map (\i -> (instr $ fst i, snd i)) [ (ldppre32, "ldppre32")
+a64v8instrs = map (\i -> (instr $ fst i, snd i)) [  (ldppre32, "ldppre32")
                                                  , (ldppost32, "ldppost32")
                                                  , (ldppre64, "ldppre64")
                                                  , (ldppost64, "ldppost64")
@@ -61,22 +61,22 @@ _31 = c 31
 
 -- ldp
 
-ldppre c = [ constant c 31 30
-           , constant 0b10100011 29 22
-           , t `eq'` n
-           , t2 `eq'` n
+ldppre c = [ constant 31 30 c
+           , constant 29 22 0b10100011
+           , dname "t" $ t `eq'` n
+           , dname "t2" $ t2 `eq'` n
            ]
 
-ldppost c = [ constant c 31 30
-            , constant 0b10100111 29 22
-            , t `eq'` n
-            , t2 `eq'` n
+ldppost c = [ constant 31 30 c
+            , constant 29 22 0b10100111
+            , dname "t" $ t `eq'` n
+            , dname "t2" $ t2 `eq'` n
             ]
 
-ldppre32  = ldppre 00
-ldppost32 = ldppost 00
-ldppre64  = ldppre 10
-ldppost64 = ldppost 10
+ldppre32  = ldppre  0b00
+ldppost32 = ldppost 0b00
+ldppre64  = ldppre  0b10
+ldppost64 = ldppost 0b10
 
 -- loads
 
@@ -89,6 +89,7 @@ loadpre c1 c2 c3 = [ constant 31 30 c1
 loadpost c1 c2 c3 = [ constant 31 30 c1
                     , constant 29 21 c2
                     , constant 11 10 c3
+                    , (n `eq'` t) `and'` (n `neq'` _31)
                     ]
 
 -- ldr imm
@@ -138,6 +139,7 @@ storepre c1 c2 c3 = [ constant 31 30 c1
 storepost c1 c2 c3 = [ constant 31 30 c1
                      , constant 29 21 c2
                      , constant 11 10 c3
+                     , (n `eq'` t) `and'` (n `neq'` _31)
                      ]
 -- str
 
@@ -162,8 +164,8 @@ s = v 20 16
 
 storex c0 = [ constant 31 21 c0
             , constant 15 15 0
-            , s `eq'` t
-            , (s `eq'` n) `and'` (n `eq'` _31)
+            , dname "s" $ s `eq'` t
+            , dname "sn" $ (s `eq'` n) `and'` (n `eq'` _31)
             ]
 -- stxr
 

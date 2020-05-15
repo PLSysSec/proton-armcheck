@@ -13,7 +13,7 @@ someFunc = do
   putStrLn "Checking generated code for correctness"
   -- Get the match strings
   putStrLn "Getting match strings and checking for 32 bit lengths"
-  strings <- forM a32v8instrs $ \is -> do
+  strings <- forM a64v8instrs $ \is -> do
     instrMatch <- genConstantMatchInstr is
     let str = bitstring instrMatch
     print instrMatch

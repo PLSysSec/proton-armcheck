@@ -36,7 +36,7 @@ genConstantMatchInstr (inst, name) = do
   return $ InstrMatch name bitstring $ map mkConstraint test
 
 genInstrMatches :: String -> [Bits] -> IO String
-genInstrMatches str [] = return str
+genInstrMatches str [] = return $ str ++ replicate (32 - length str) 'x'
 genInstrMatches str (b:xs) =
   case b of
     Global {} -> genInstrMatches str xs
