@@ -5,7 +5,7 @@ import           AST
 -- Section C6.2
 
 a64v8instrs :: [(Instruction, String)]
-a64v8instrs = map (\i -> (instr $ fst i, snd i)) [  (ldppre32, "ldppre32")
+a64v8instrs = map (\i -> (instr $ fst i, snd i)) [ (ldppre32, "ldppre32")
                                                  , (ldppost32, "ldppost32")
                                                  , (ldppre64, "ldppre64")
                                                  , (ldppost64, "ldppost64")
@@ -216,5 +216,6 @@ store co = [ constant 31 21 co
 strreg32 = store 0b10111000001
 strreg64 = store 0b11111000001
 strbreg  = store 0b00111000001
-strhreg  = store 0b11111000001
+strhreg  = store 0b01111000001
+
 
