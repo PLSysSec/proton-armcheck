@@ -2,3 +2,10 @@
 
 This directory will eventually contain code to generate an ARM instruction
 checker from a list of instructions and their invariants.
+
+# building wasm sandbox
+
+1. Clone and build: https://github.com/PLSysSec/rlbox_lucet_sandbox
+2. Symilnk the `build` and `c_src` directories here.
+3. cmake -S . -B ./out
+4. cd out && make

@@ -1,3 +1,6 @@
 __pycache__
 *.pyc
 _ckinstr*
+armgen.c
+armgen.h
+armgen.o
