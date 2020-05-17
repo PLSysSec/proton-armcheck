@@ -1,16 +1,21 @@
 # armgen
 
-`python3 decision_tree_generator.py` will read `instr` and output `armgen.c` and `armgen.h`
+`python3 decision_tree_generator.py` will read `instrs_32` and `instrs_64` and output
+`armgen_32.cpp` and `armgen_64.cpp`, respectively.
 
-The function `check_buffer` is the entry point for the checker.
+The function `proton_armcheck_check_buffer` is the entry point for the checker. It takes the
+following parameters:
 
 - `buf` is the buffer to check
 - `len` is the size
-- The return value is 0 on success, and nonzero otherwise.
-  When nonzero, it should be interpreted as follows:
-    - `ret & 0xffff` is the offset into `instr_names` for the failed instr
-    - `(ret >> 16) & 0xffff` is the offset into `test_names` for the failed test
-    - `(ret >> 32)` is the offset into `buf` that caused the failure
+- `fail_idx` is an output parameter where, on failure, the offset into `buf` that caused the
+  failure will be written.
+- `fail_instr_name` is an output parameter where, on failure, the name of the failed instruction
+  will be written.
+- `fail_test_name` is an output parameter where, on failure, the name of the failed test will be
+  written.
+
+The return value is `true` on success, and `false` otherwise.
 
 Right now the checker just scans the whole buffer checking each 32-bit word.
 This may need to change in the future.
