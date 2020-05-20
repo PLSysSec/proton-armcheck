@@ -1,0 +1,20 @@
+#include <cstddef>
+#include <cstdint>
+
+$code
+
+extern "C" bool proton_armcheck_check_buffer(const uint32_t *buf,
+                                             size_t len, size_t *fail_idx,
+                                             const char **fail_instr_name,
+                                             const char **fail_test_name) {
+    for (size_t idx = 0; idx < len; ++idx) {
+        uint32_t ret = check_instr(buf[idx]);
+        if ((ret >> 16) != 0) {
+            *fail_idx = idx;
+            *fail_instr_name = instr_names[ret & 0xffff];
+            *fail_test_name = test_names[(ret >> 16) & 0xffff];
+            return false;
+        }
+    }
+    return true;
+}

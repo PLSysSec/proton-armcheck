@@ -1,0 +1,102 @@
+#include <cstddef>
+#include <cstdint>
+#include <optional>
+#include <set>
+
+using namespace std;
+
+$code
+
+static constexpr bool is_uncond_jump(uint32_t instr) {
+    // either B or BL: x00101
+    return ((instr >> 26) & 0b011111) == 0b000101;
+}
+
+static constexpr bool is_cond19_jump(uint32_t instr) {
+    const uint32_t instrL24 = instr >> 24;
+    // 01010100
+    const bool is_Bcond = instrL24 == 0b01010100;
+
+    // x011010x
+    const bool is_CBxx = (instrL24 & 0b01111110) == 0b00110100;
+    return is_Bcond || is_CBxx;
+}
+
+static constexpr bool is_cond14_jump(uint32_t instr) {
+    // x011011
+    return ((instr >> 25) & 0b0111111) == 0b0011011;
+}
+
+static constexpr optional<int32_t> get_jump_target(uint32_t instr) {
+    if (is_uncond_jump(instr)) {
+        // sign extension
+        const bool neg = instr & (1u << 25);
+        int32_t ret = -(neg ? (1 << 26) : 0);
+        ret += instr & ((1u << 26) - 1);
+        return ret;
+    }
+
+    // conditional branch other than TBxx
+    if (is_cond19_jump(instr)) {
+        // sign extension
+        const bool neg = instr & (1u << 23);
+        int32_t ret = -(neg ? (1 << 19) : 0);
+        ret += (instr >> 5) & ((1u << 19) - 1);
+        return ret;
+    }
+
+    // TBNZ and TBZ
+    if (is_cond14_jump(instr)) {
+        // sign extension
+        const bool neg = instr & (1u << 18);
+        int32_t ret = -(neg ? (1 << 14) : 0);
+        ret += (instr >> 5) & ((1u << 14) - 1);
+        return ret;
+    }
+
+    return {};
+}
+
+static set<size_t> get_all_targets(const uint32_t *buf, size_t len) {
+    set<size_t> ret{};
+    for (size_t idx = 0; idx < len; ++idx) {
+        const auto targ = get_jump_target(buf[idx]);
+        if (targ.has_value()) {
+            ret.insert(idx + *targ);
+        }
+    }
+    return ret;
+}
+
+extern "C" bool proton_armcheck_check_buffer(const uint32_t *buf, size_t len,
+                                             size_t *fail_idx,
+                                             const char **fail_instr_name,
+                                             const char **fail_test_name) {
+    bool valid = true;
+    const auto targs = get_all_targets(buf, len);
+    auto next_targ = targs.cbegin();
+    for (size_t idx = 0; idx < len; ++idx) {
+        const auto &instr = buf[idx];
+
+        if ((next_targ != targs.cend()) && (idx == *next_targ)) {
+            valid = true; // if this is a jump target, turn the scanner back on
+            next_targ++;  // also, go to the next jump target
+        }
+
+        if (valid) {
+            const auto ret = check_instr(instr);
+            if ((ret >> 16) != 0) {
+                *fail_idx = idx;
+                *fail_instr_name = instr_names[ret & 0xffff];
+                *fail_test_name = test_names[(ret >> 16) & 0xffff];
+                return false;
+            }
+        }
+
+        if (is_uncond_jump(instr)) {
+            valid = false;
+        }
+    }
+
+    return true;
+}

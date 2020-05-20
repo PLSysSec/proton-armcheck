@@ -4,3 +4,5 @@ _ckinstr*
 armgen.c
 armgen.h
 armgen.o
+armgen_32.cpp
+armgen_64.cpp
