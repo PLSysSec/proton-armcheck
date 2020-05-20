@@ -54,7 +54,7 @@ class Instrs(object):
                 tnames.add(n[0])
 
         # test names
-        cls.tnames = ["OK"] + list(tnames)
+        cls.tnames = ["OK"] + list(sorted(tnames))
         tstr = "const char *test_names[] = {"
         for tname in cls.tnames:
             tstr += "\"%s\"," % tname
