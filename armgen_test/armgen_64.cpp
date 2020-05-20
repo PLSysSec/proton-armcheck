@@ -767,28 +767,53 @@ static uint32_t check_instr(uint32_t instr) {
 }
 
 static constexpr bool is_uncond_jump(uint32_t instr) {
-    return (instr >> 26) == 0b000101;
+    // either B or BL: x00101
+    return ((instr >> 26) & 0b011111) == 0b000101;
+}
+
+static constexpr bool is_cond19_jump(uint32_t instr) {
+    const uint32_t instrL24 = instr >> 24;
+    // 01010100
+    const bool is_Bcond = instrL24 == 0b01010100;
+
+    // x011010x
+    const bool is_CBxx = (instrL24 & 0b01111110) == 0b00110100;
+    return is_Bcond || is_CBxx;
+}
+
+static constexpr bool is_cond14_jump(uint32_t instr) {
+    // x011011
+    return ((instr >> 25) & 0b0111111) == 0b0011011;
 }
 
 optional<int32_t> get_jump_target(uint32_t instr) {
-    if (is_uncond_jump(instr)){
-        // sign extension
+	if (is_uncond_jump(instr)) {
+		// sign extension
         const bool neg = instr & (1u << 25);
         int32_t ret = -(neg ? (1 << 26) : 0);
         ret += instr & ((1u << 26) - 1);
         return ret;
-    }
+	}
 
-    // conditional branch
-    if ((instr >> 24) == 0b01010100) {
-        // sign extension
+	// conditional branch other than TBxx
+	if (is_cond19_jump(instr)) {
+		// sign extension
         const bool neg = instr & (1u << 23);
         int32_t ret = -(neg ? (1 << 19) : 0);
         ret += (instr >> 5) & ((1u << 19) - 1);
         return ret;
+	}
+
+    // TBNZ and TBZ
+    if (is_cond14_jump(instr)) {
+        // sign extension
+        const bool neg = instr & (1u << 18);
+        int32_t ret = -(neg ? (1 << 14) : 0);
+        ret += (instr >> 5) & ((1u << 14) - 1);
+        return ret;
     }
 
-    return {};
+	return {};
 }
 
 set<size_t> get_all_targets(const uint32_t *buf, size_t len) {
