@@ -1,2 +1,5 @@
 fuck_*.out
 fuck_*.dump
+armgen_64.o
+foo
+armgen_test
