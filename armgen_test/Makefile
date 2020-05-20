@@ -10,10 +10,14 @@ out: fuck.txt
 dump: out
 	for i in *.out; do aarch64-linux-gnu-objdump -EL -D -b binary -maarch64 $$i > "$$(basename $$i .out)".dump; done
 
+armgen_64.cpp:
+	python3 ../armgen/decision_tree_generator.py
+	cp ../armgen/armgen_64.cpp .
+
 armgen_64.o: armgen_64.cpp
 
 armgen_test: armgen_test.cpp armgen_64.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 clean:
-	rm -f fuck_*.out fuck_*.dump armgen_64.o
+	rm -f fuck_*.out fuck_*.dump armgen_64.o armgen_test armgen_64.cpp
