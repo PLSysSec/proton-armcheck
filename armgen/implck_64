@@ -33,7 +33,6 @@ static constexpr int32_t chop_and_extend(uint32_t instr, int n_right, int n_tot)
     return rem - (neg ? (1l << n_tot) : 0);
 }
 
-#include <cassert>
 static constexpr optional<int32_t> get_jump_target(uint32_t instr) {
     auto ret = [&] {
         // B(L) and B(L).cond
