@@ -13,8 +13,10 @@
 
 using namespace std;
 
-optional<int32_t> get_jump_target(uint32_t instr);
+/*
 set<size_t> get_all_targets(const uint32_t *buf, size_t len);
+*/
+
 extern "C" bool proton_armcheck_check_buffer(const uint32_t *buf, size_t len,
 											 size_t *fail_idx,
 											 const char **fail_instr_name,
@@ -35,6 +37,14 @@ int main(int argc, char **argv) {
 	size_t len = lseek(fd, 0, SEEK_END);
     uint32_t *buf = (uint32_t *)mmap(NULL, len, PROT_READ, MAP_PRIVATE, fd, 0);
     close(fd);
+
+    /*
+    const auto alltarg = get_all_targets(buf, len / 4);
+    cout << hex;
+    for (auto t: alltarg) {
+        cout << "0x" << (4 * t) << endl;
+    }
+    */
 
     size_t fail_idx;
     const char *fail_instr_name;
