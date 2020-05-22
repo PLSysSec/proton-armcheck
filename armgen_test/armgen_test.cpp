@@ -23,13 +23,14 @@ extern "C" bool proton_armcheck_check_buffer(const uint32_t *buf, size_t len,
 											 const char **fail_test_name);
 
 int main(int argc, char **argv) {
-    int fd = [&] {
+    const char *filename = [&] {
         if (argc < 2) {
-            return open("fuck_0000.out", O_RDONLY);
+            return "fuck_0000.out";
         } else {
-            return open(argv[1], O_RDONLY);
+            return (const char *)argv[1];
         }
     }();
+    int fd = open(filename, O_RDONLY);
     if (fd < 0) {
         perror("Could not open file");
         return -1;
@@ -50,7 +51,7 @@ int main(int argc, char **argv) {
     const char *fail_instr_name;
     const char *fail_test_name;
     if (!proton_armcheck_check_buffer(buf, len / 4, &fail_idx, &fail_instr_name, &fail_test_name)) {
-        printf("failed: %s (%s) at %lx\n", fail_instr_name, fail_test_name, fail_idx);
+        printf("%s failed: %s (%s) at %lx\n", filename, fail_instr_name, fail_test_name, 4 * fail_idx);
         return -2;
     }
 
