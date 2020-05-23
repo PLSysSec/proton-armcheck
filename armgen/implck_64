@@ -59,13 +59,43 @@ static constexpr optional<int32_t> get_jump_target(uint32_t instr) {
 }
 
 static set<size_t> get_all_targets(const uint32_t *buf, size_t len) {
-    set<size_t> ret{};
-    for (size_t idx = 0; idx < len; ++idx) {
-        const auto targ = get_jump_target(buf[idx]);
-        if (targ.has_value()) {
-            ret.insert(idx + *targ);
+    set<size_t> ret{0};
+
+    static constexpr const size_t MAX_ITERS = 10;
+    for (size_t start_size = 0, niter = 0; start_size < ret.size() && niter < MAX_ITERS; ++niter) {
+        start_size = ret.size();
+
+        auto next_targ = ret.cbegin();
+        for (size_t idx = *next_targ; idx < len; ++idx) {
+            const auto &instr = buf[idx];
+
+            // check this instruction
+            const auto jtarg = get_jump_target(instr);
+            if (jtarg.has_value()) {
+                // update set with new target
+                size_t targ = idx + *jtarg;
+                ret.insert(targ);
+
+                // now make sure that next_targ points to the next position after idx (or end-iter)
+                if (next_targ != ret.cbegin()) {
+                    next_targ--;
+                }
+                while ((next_targ != ret.cend()) && (idx >= *next_targ)) {
+                    next_targ++;
+                }
+
+                // handle unconditional jump case --- go to the next known-good spot in the code
+                if (is_uncond_jump(instr)) {
+                    if (next_targ == ret.cend()) {
+                        break;
+                    } else {
+                        idx = *next_targ - 1;
+                    }
+                }
+            }
         }
     }
+
     return ret;
 }
 
